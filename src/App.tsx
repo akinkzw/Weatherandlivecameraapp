@@ -158,6 +158,11 @@ function App() {
     return areaToRegionMap[selectedArea] || [];
   };
 
+  // トップへスクロール
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -189,14 +194,19 @@ function App() {
               <ImageWithFallback
                 src={bannerData.icon.url}
                 alt="川アイコン"
-                className="w-12 h-12 drop-shadow-lg"
+                className="w-12 h-12 drop-shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                onClick={scrollToTop}
               />
             ) : (
-              <div className="w-12 h-12 bg-white/20 rounded-lg" />
+              <div 
+                className="w-12 h-12 bg-white/20 rounded-lg cursor-pointer hover:scale-110 transition-transform" 
+                onClick={scrollToTop}
+              />
             )}
             <h1 
-              className="text-white tracking-wide drop-shadow-lg text-[33.6px] md:text-[48px]" 
+              className="text-white tracking-wide drop-shadow-lg text-[33.6px] md:text-[48px] cursor-pointer hover:opacity-90 transition-opacity" 
               style={{ fontFamily: "'Sawarabi Mincho', serif" }}
+              onClick={scrollToTop}
             >
               川の空もよう
             </h1>
@@ -220,7 +230,7 @@ function App() {
               setSelectedRegion(value);
               setSelectedArea('all');
             }}>
-              <SelectTrigger className="w-[200px] h-12 bg-white/95 backdrop-blur-sm text-lg border-2 border-transparent focus:border-white/50">
+              <SelectTrigger className="w-[200px] h-12 bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-white/50">
                 <SelectValue placeholder="地域を選択" />
               </SelectTrigger>
               <SelectContent>
@@ -366,7 +376,7 @@ function App() {
                     onClick={() => setSelectedPrefecture('all')}
                     className="h-auto py-3 font-mincho"
                   >
-                    すべて
+                    ��べて
                   </Button>
                   {getAvailablePrefectures().map((pref) => {
                     // 京都府は「京都」、大阪府は「大阪」、東京都は「東京」として表示

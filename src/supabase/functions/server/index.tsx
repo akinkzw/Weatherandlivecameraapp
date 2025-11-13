@@ -29,29 +29,38 @@ app.get("/make-server-5f24a873/banner", async (c) => {
   try {
     const apiKey = Deno.env.get('MICROCMS_API_KEY');
     
+    console.log('=== Banner API Request ===');
+    console.log('API Key exists:', !!apiKey);
+    console.log('API Key length:', apiKey?.length);
+    
     if (!apiKey) {
       console.error('MICROCMS_API_KEY is not set');
       return c.json({ error: 'API key not configured' }, 500);
     }
 
+    console.log('Fetching from microCMS...');
     const response = await fetch('https://0jb94z3dca.microcms.io/api/v1/banner', {
       headers: {
         'X-MICROCMS-API-KEY': apiKey,
       },
     });
 
+    console.log('microCMS Response Status:', response.status);
+    console.log('microCMS Response StatusText:', response.statusText);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`microCMS API error: ${response.status} ${response.statusText}`);
       console.error('Error response:', errorText);
-      return c.json({ error: 'Failed to fetch banner data from microCMS' }, response.status);
+      return c.json({ error: 'Failed to fetch banner data from microCMS', details: errorText }, response.status);
     }
 
     const data = await response.json();
+    console.log('Banner data successfully fetched:', JSON.stringify(data).substring(0, 200));
     return c.json(data);
   } catch (error) {
     console.error('Error fetching banner data:', error);
-    return c.json({ error: 'Internal server error while fetching banner data' }, 500);
+    return c.json({ error: 'Internal server error while fetching banner data', details: String(error) }, 500);
   }
 });
 
@@ -125,7 +134,7 @@ app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-2", async (c) => {
       { id: 251, name: 'キモマ沼川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 252, name: 'セキタンベツ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 253, name: 'ヒトシベツー号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
-      { id: 254, name: 'ヒトシベツ二号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
+      { id: 254, name: 'ヒトシベツ二号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷���方' },
       { id: 255, name: 'ヒトシベツ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 256, name: 'ポロナイー号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 257, name: 'ポロナイ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
@@ -223,7 +232,7 @@ app.post("/make-server-5f24a873/add-rivers-batch-3", async (c) => {
       'ポロナイー号線川', 'ポロナイ川', 'ポロー号線川', 'ポロ川', 'ポンポロ川',
       'モケウニ川', 'ユウクルー号線川', 'ユウクル川', '宗谷濁川', '成田川',
       '旧濁川', '清川', '猿払一号線川', '猿払七号線川', '猿払三号線川',
-      '猿払九号線川', '猿��二号線川', '猿払五号線川', '猿払八号線川', '猿払六号線川',
+      '猿払九号線川', '猿二号線川', '猿払五号線川', '猿払八号線川', '猿払六号線川',
       '猿払十号線川', '猿払四号線川', '錦川', '猿払川', 'カリベツ川',
       'ニタチナイ川', 'あめの沢川', 'アサヒの沢川', 'アザミノ沢川', 'イワナノ沢川',
       'ウノサワ川', 'エイコの沢川', 'オサチナイ川', 'オサナイ川', 'オビンナイ川',

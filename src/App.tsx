@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
@@ -68,6 +68,9 @@ function App() {
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [rivers, setRivers] = useState<River[]>([]);
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
+  
+  // 都道府県セクションへの参照
+  const prefecturesSectionRef = useRef<HTMLDivElement>(null);
 
   // 川のデータを取得
   useEffect(() => {
@@ -139,6 +142,14 @@ function App() {
     setSelectedRegion('all');
     setSelectedPrefecture('all');
     setSearchQuery('');
+    
+    // 都道府県セクションへスムーズにスクロール（DOM更新後に実行）
+    setTimeout(() => {
+      prefecturesSectionRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 100);
   };
 
   // 選択された地方の都道府県リストを取得
@@ -343,7 +354,7 @@ function App() {
             
             {/* 都道府県ボタン */}
             {selectedArea !== 'all' && getAvailablePrefectures().length > 0 && (
-              <div className="mt-6">
+              <div className="mt-6" ref={prefecturesSectionRef}>
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <div className="h-px bg-slate-300 flex-1"></div>
                   <span className="text-slate-600 text-sm px-3">都道府県</span>

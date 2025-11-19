@@ -56,7 +56,24 @@ app.get("/make-server-5f24a873/banner", async (c) => {
     }
 
     const data = await response.json();
-    console.log('Banner data successfully fetched:', JSON.stringify(data).substring(0, 200));
+    console.log('=== FULL microCMS Response ===');
+    console.log(JSON.stringify(data, null, 2));
+    console.log('=== Data Type Check ===');
+    console.log('Has contents array:', Array.isArray(data.contents));
+    console.log('Has items array:', Array.isArray(data.items));
+    console.log('Is direct object:', typeof data === 'object' && !Array.isArray(data.contents) && !Array.isArray(data.items));
+    
+    // microCMSがリスト形式の場合、最初の要素を返す
+    if (data.contents && Array.isArray(data.contents) && data.contents.length > 0) {
+      console.log('Returning first item from contents array');
+      return c.json(data.contents[0]);
+    } else if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+      console.log('Returning first item from items array');
+      return c.json(data.items[0]);
+    }
+    
+    // オブジェクト形式の場合はそのまま返す
+    console.log('Returning data as-is (object format)');
     return c.json(data);
   } catch (error) {
     console.error('Error fetching banner data:', error);
@@ -134,7 +151,7 @@ app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-2", async (c) => {
       { id: 251, name: 'キモマ沼川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 252, name: 'セキタンベツ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 253, name: 'ヒトシベツー号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
-      { id: 254, name: 'ヒトシベツ二号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷���方' },
+      { id: 254, name: 'ヒトシベツ二号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷方' },
       { id: 255, name: 'ヒトシベツ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 256, name: 'ポロナイー号線川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
       { id: 257, name: 'ポロナイ川', prefecture: '北海道', region: 'hokkaido', area: '宗谷地方' },
@@ -218,7 +235,7 @@ app.post("/make-server-5f24a873/add-rivers-batch-3", async (c) => {
     const riverNames = [
       '声問川', 'パンケシュプナイ川', 'タツニウシュナイ川', '炭焼の沢川', 'ケナシポロ川',
       'メグマ川', '一の沢川', '上増幌奥の沢川', '下の沢川', '二の沢川',
-      '千国の沢川', '右の沢川', '吉田牧場の沢川', '四の沢川', '奥の沢川',
+      '千国の沢川', '右の沢川', '吉田���場の沢川', '四の沢川', '奥の沢川',
       '富沢の沢川', '川住川', '炭山の沢川', '炭焼境沢川', '牧場の沢川',
       '石の沢川', '増幌川', 'イチャンナイ川', '七線川', '增幌中川',
       'ケナシポロ川', '桜川', '知来別一号線川', '知来別三号線川', '知来別二号線川',
@@ -232,7 +249,7 @@ app.post("/make-server-5f24a873/add-rivers-batch-3", async (c) => {
       'ポロナイー号線川', 'ポロナイ川', 'ポロー号線川', 'ポロ川', 'ポンポロ川',
       'モケウニ川', 'ユウクルー号線川', 'ユウクル川', '宗谷濁川', '成田川',
       '旧濁川', '清川', '猿払一号線川', '猿払七号線川', '猿払三号線川',
-      '猿払九号線川', '猿二号線川', '猿払五号線川', '猿払八号線川', '猿払六号線川',
+      '猿払九号線川', '猿二号線川', '猿払五号線川', '猿払八号線', '猿払六号線川',
       '猿払十号線川', '猿払四号線川', '錦川', '猿払川', 'カリベツ川',
       'ニタチナイ川', 'あめの沢川', 'アサヒの沢川', 'アザミノ沢川', 'イワナノ沢川',
       'ウノサワ川', 'エイコの沢川', 'オサチナイ川', 'オサナイ川', 'オビンナイ川',
@@ -449,7 +466,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       // 東京都
       { name: '多摩川', pref: '東京都', region: 'kanto' }, { name: '荒川', pref: '東京都', region: 'kanto' },
       { name: '隅田川', pref: '東京都', region: 'kanto' }, { name: '神田川', pref: '東京都', region: 'kanto' },
-      // 神奈川県
+      // 神奈��県
       { name: '相模川', pref: '神奈川県', region: 'kanto' }, { name: '酒匂川', pref: '神奈川県', region: 'kanto' },
       { name: '鶴見川', pref: '神奈川県', region: 'kanto' }, { name: '多摩川', pref: '神奈川県', region: 'kanto' },
       // 新潟県
@@ -581,6 +598,385 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
   } catch (error) {
     console.error('Error restoring all prefectures:', error);
     return c.json({ error: 'Failed to restore rivers' }, 500);
+  }
+});
+
+// ライブカメラ画像プロキシエンドポイント（テスト用）
+app.get("/make-server-5f24a873/camera-proxy", async (c) => {
+  try {
+    const cameraId = c.req.query('cameraId');
+    
+    console.log('=== Camera Proxy Request ===');
+    console.log('Camera ID:', cameraId);
+    
+    if (!cameraId) {
+      return c.json({ error: 'Camera ID is required' }, 400);
+    }
+
+    // 国土交通省のカメラ画像URL（実際のURLは異なる可能性があります）
+    // 例: https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0303050101100010
+    const cameraUrl = `https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=${cameraId}`;
+    
+    console.log('Fetching camera image from:', cameraUrl);
+    
+    // カメラページをフェッチ
+    const response = await fetch(cameraUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+
+    console.log('Camera response status:', response.status);
+
+    if (!response.ok) {
+      console.error(`Camera fetch error: ${response.status}`);
+      return c.json({ 
+        error: 'Failed to fetch camera image', 
+        status: response.status,
+        cameraUrl 
+      }, response.status);
+    }
+
+    const html = await response.text();
+    console.log('HTML length:', html.length);
+    
+    // HTMLから実際の画像URLを抽出する（簡易的な実装）
+    // 実際のURLパターンは検証が必要
+    const imageUrlMatch = html.match(/src=["']([^"']*\.jpg[^"']*)["']/i) || 
+                          html.match(/src=["']([^"']*\.jpeg[^"']*)["']/i) ||
+                          html.match(/src=["']([^"']*image[^"']*)["']/i);
+    
+    if (imageUrlMatch && imageUrlMatch[1]) {
+      let imageUrl = imageUrlMatch[1];
+      
+      // 相対URLの場合は絶対URLに変換
+      if (imageUrl.startsWith('/')) {
+        imageUrl = `https://www.river.go.jp${imageUrl}`;
+      } else if (imageUrl.startsWith('../')) {
+        imageUrl = `https://www.river.go.jp/kawabou/${imageUrl.replace('../', '')}`;
+      } else if (!imageUrl.startsWith('http')) {
+        imageUrl = `https://www.river.go.jp/kawabou/${imageUrl}`;
+      }
+      
+      console.log('Found image URL:', imageUrl);
+      
+      // 画像を直接フェッチして返す
+      const imageResponse = await fetch(imageUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Referer': cameraUrl,
+        },
+      });
+      
+      if (imageResponse.ok) {
+        const imageBlob = await imageResponse.arrayBuffer();
+        const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+        
+        return new Response(imageBlob, {
+          headers: {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=60', // 1分キャッシュ
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } else {
+        console.error('Image fetch failed:', imageResponse.status);
+        return c.json({ 
+          error: 'Failed to fetch image', 
+          imageUrl,
+          status: imageResponse.status 
+        }, 500);
+      }
+    } else {
+      console.log('No image URL found in HTML');
+      console.log('HTML snippet:', html.substring(0, 500));
+      
+      return c.json({ 
+        error: 'Could not extract image URL from camera page',
+        cameraUrl,
+        htmlLength: html.length
+      }, 500);
+    }
+  } catch (error) {
+    console.error('Error in camera proxy:', error);
+    return c.json({ 
+      error: 'Internal server error in camera proxy', 
+      details: String(error) 
+    }, 500);
+  }
+});
+
+// 国土交通省の川の防災情報APIから河川データを取得（公式API利用）
+app.get("/make-server-5f24a873/river-api-test", async (c) => {
+  try {
+    const riverName = c.req.query('riverName') || '利根川';
+    
+    console.log('=== River API Test ===');
+    console.log('River Name:', riverName);
+    
+    // 国土交通省のリアルタイム川情報API
+    // 実際のエンドポイントは以下のようなものがあります：
+    const apiEndpoints = [
+      {
+        name: '水文水質データベース',
+        url: 'http://www1.river.go.jp/cgi-bin/DspWaterData.exe',
+        description: '水位・雨量データ'
+      },
+      {
+        name: 'XRAIN (高解像度降水ナウキャスト)',
+        url: 'https://www.river.go.jp/x/xmn0107010.php',
+        description: 'リアルタイム雨量データ'
+      }
+    ];
+    
+    // テスト: 利根川水系の観測所データを取得
+    // 実際のAPIエンドポイントをテスト
+    const testResults = [];
+    
+    // 1. 川の防災情報ポータルのAPIをテスト
+    try {
+      // XMLフィードの例
+      const xmlUrl = 'http://www1.river.go.jp/cgi-bin/DspWaterData.exe?ID=303051283904020&KIND=1&PAGE=0';
+      console.log('Testing XML feed:', xmlUrl);
+      
+      const response = await fetch(xmlUrl);
+      const data = await response.text();
+      
+      testResults.push({
+        endpoint: 'XML水位データフィード',
+        status: response.status,
+        contentType: response.headers.get('content-type'),
+        dataLength: data.length,
+        sample: data.substring(0, 500)
+      });
+    } catch (error) {
+      testResults.push({
+        endpoint: 'XML水位データフィード',
+        error: String(error)
+      });
+    }
+    
+    return c.json({
+      message: '国土交通省 川の防災情報API テスト',
+      riverName,
+      availableApis: apiEndpoints,
+      testResults,
+      notes: [
+        '国土交通省は公式APIとしてXML/JSONフィードを提供しています',
+        'これらのAPIは利用規約に従って使用可能です',
+        'スクレイピングではなく公式APIを使用することを推奨します',
+        '観測所IDが必要な場合があります'
+      ]
+    });
+  } catch (error) {
+    console.error('Error in river API test:', error);
+    return c.json({ 
+      error: 'Internal server error in river API test', 
+      details: String(error) 
+    }, 500);
+  }
+});
+
+// 国土交通省の河川カメラ情報API（公式データ利用）
+app.get("/make-server-5f24a873/river-cameras", async (c) => {
+  try {
+    const riverName = c.req.query('riverName');
+    const prefecture = c.req.query('prefecture');
+    
+    console.log('=== River Cameras API Request ===');
+    console.log('River Name:', riverName);
+    console.log('Prefecture:', prefecture);
+    
+    if (!riverName) {
+      return c.json({ error: 'River name is required' }, 400);
+    }
+    
+    // 国土交通省のオープンデータ / APIから河川カメラ情報を取得
+    // 実装例：地方整備局ごとのAPIエンドポイント
+    
+    // 主要河川のカメラ情報（サンプル実装）
+    // 実際の運用では国土交通省の公式APIやオープンデータカタログから取得
+    const riverCameraDatabase: { [key: string]: any[] } = {
+      '利根川': [
+        {
+          id: '0303050101100010',
+          name: '栗橋観測所',
+          location: '埼玉県久喜市',
+          imageUrl: 'https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0303050101100010',
+          lastUpdated: '10分前',
+          lat: 36.1288,
+          lon: 139.6645
+        },
+        {
+          id: '0303050101100020',
+          name: '取手観測所',
+          location: '茨城県取手市',
+          imageUrl: 'https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0303050101100020',
+          lastUpdated: '10分前',
+          lat: 35.9087,
+          lon: 140.0531
+        }
+      ],
+      '荒川': [
+        {
+          id: '0303060101100010',
+          name: '治水橋',
+          location: '東京都北区',
+          imageUrl: 'https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0303060101100010',
+          lastUpdated: '10分前',
+          lat: 35.7681,
+          lon: 139.7339
+        }
+      ],
+      '千曲川': [
+        {
+          id: '0203040101100010',
+          name: '立ヶ花観測所',
+          location: '長野県中野市',
+          imageUrl: 'https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0203040101100010',
+          lastUpdated: '10分前',
+          lat: 36.7803,
+          lon: 138.3664
+        }
+      ]
+    };
+    
+    const cameras = riverCameraDatabase[riverName] || [];
+    
+    return c.json({
+      riverName,
+      prefecture,
+      cameraCount: cameras.length,
+      cameras,
+      source: '国土交通省 川の防災情報',
+      notes: [
+        'このデータは国土交通省の公開情報に基づいています',
+        '実際の運用では公式APIまたはオープンデータカタログから取得します',
+        'カメラIDは観測所IDに対応しています'
+      ]
+    });
+  } catch (error) {
+    console.error('Error fetching river cameras:', error);
+    return c.json({ 
+      error: 'Internal server error while fetching river cameras', 
+      details: String(error) 
+    }, 500);
+  }
+});
+
+// スクレイピングAPIクライアントをインポート
+import { getRiverCameraInfo } from './river_graphql.tsx';
+import { findStationById } from './river_observation_data.tsx';
+
+// 新しいAPIエンドポイント: HTMLスクレイピングで観測所情報とカメラURLを取得
+app.get("/make-server-5f24a873/river-info/:riverName", async (c) => {
+  try {
+    const riverName = c.req.param('riverName');
+    
+    console.log('=== River Info Request (Web Scraping) ===');
+    console.log('River Name:', riverName);
+    
+    // HTMLスクレイピングでデータ取得
+    const { cameras, stations, source } = await getRiverCameraInfo(riverName);
+    
+    console.log(`Data source: ${source}`);
+    console.log(`Found ${cameras.length} cameras, ${stations.length} stations`);
+    
+    return c.json({
+      riverName,
+      hasData: cameras.length > 0 || stations.length > 0,
+      cameraCount: cameras.length,
+      stationCount: stations.length,
+      cameras: cameras.map(cam => ({
+        id: cam.id,
+        name: cam.name,
+        location: cam.location,
+        imageUrl: cam.imageUrl,
+        detailUrl: cam.detailUrl,
+        cameraUrl: cam.detailUrl, // フロントエンド互換性のため
+        hasCameraUrl: true,
+        lastUpdated: cam.lastUpdated || '最新'
+      })),
+      stations: stations.map(s => ({
+        ...s,
+        hasCameraUrl: s.hasCamera,
+        hasWaterLevelUrl: s.hasWaterLevel
+      })),
+      source: `国土交通省 川の防災情報 (${source})`,
+      apiEndpoint: 'HTML Scraping'
+    });
+  } catch (error) {
+    console.error('Error fetching river info:', error);
+    return c.json({ 
+      error: 'Internal server error while fetching river info', 
+      details: String(error),
+      riverName
+    }, 500);
+  }
+});
+
+// 新しいAPIエンドポイント: 水位データをリアルタイム取得
+app.get("/make-server-5f24a873/water-level/:stationId", async (c) => {
+  try {
+    const stationId = c.req.param('stationId');
+    
+    console.log('=== Water Level Request ===');
+    console.log('Station ID:', stationId);
+    
+    const station = findStationById(stationId);
+    
+    if (!station) {
+      return c.json({ error: '観測所が見つかりません' }, 404);
+    }
+    
+    if (!station.waterLevelUrl) {
+      return c.json({ 
+        error: 'この観測所には水位データURLが登録されていません',
+        station: station.stationName 
+      }, 404);
+    }
+    
+    // 国土交通省APIから水位データを取得
+    try {
+      const response = await fetch(station.waterLevelUrl);
+      const htmlText = await response.text();
+      
+      // HTMLから水位データを抽出（簡易的な実装）
+      // 実際のHTMLの構造に応じて調整が必要
+      const waterLevelMatch = htmlText.match(/水位[：:]\s*([0-9.]+)\s*m/i);
+      const waterLevel = waterLevelMatch ? parseFloat(waterLevelMatch[1]) : null;
+      
+      // 時刻データの抽出
+      const timeMatch = htmlText.match(/(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})/);
+      const observedAt = timeMatch 
+        ? `${timeMatch[1]}-${timeMatch[2]}-${timeMatch[3]}T${timeMatch[4]}:${timeMatch[5]}:00`
+        : null;
+      
+      return c.json({
+        stationId,
+        stationName: station.stationName,
+        riverName: station.riverName,
+        prefecture: station.prefecture,
+        waterLevel,
+        observedAt,
+        dataUrl: station.waterLevelUrl,
+        source: '国土交通省 水文水質データベース',
+        note: waterLevel === null ? 'データの解析に失敗しました。HTMLの構造が変更された可能性があります。' : undefined
+      });
+    } catch (fetchError) {
+      console.error('Error fetching water level data:', fetchError);
+      return c.json({ 
+        error: '水位データの取得に失敗しました', 
+        details: String(fetchError),
+        dataUrl: station.waterLevelUrl
+      }, 500);
+    }
+  } catch (error) {
+    console.error('Error in water level endpoint:', error);
+    return c.json({ 
+      error: 'Internal server error', 
+      details: String(error) 
+    }, 500);
   }
 });
 

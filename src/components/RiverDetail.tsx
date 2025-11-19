@@ -2,18 +2,90 @@ import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Camera, MapPin, Droplets, Video, CloudRain, Calendar } from 'lucide-react';
+import { Camera, MapPin, Droplets, Video, CloudRain, Calendar, ExternalLink, Shield } from 'lucide-react';
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
+import { getPrefectureCameraUrl } from '../utils/prefectureLinks';
+import { useState, useEffect } from 'react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 interface RiverDetailProps {
   river: River;
 }
 
+interface ObservationStation {
+  stationId: string;
+  stationName: string;
+  riverName: string;
+  prefecture: string;
+  location: string;
+  cameraUrl?: string;
+  waterLevelUrl?: string;
+  lat?: number;
+  lon?: number;
+  hasCameraUrl?: boolean;
+  hasWaterLevelUrl?: boolean;
+}
+
+interface RiverCameraData {
+  id: string;
+  name: string;
+  location: string;
+  imageUrl: string;
+  detailUrl: string;
+  cameraUrl: string;
+  hasCameraUrl: boolean;
+  lastUpdated: string;
+}
+
 export function RiverDetail({ river }: RiverDetailProps) {
   const waterLevelPercentage = (river.waterLevel / river.warningLevel) * 100;
+  const [observationStations, setObservationStations] = useState<ObservationStation[]>([]);
+  const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
+  const [loadingStations, setLoadingStations] = useState(false);
+  const [dataSource, setDataSource] = useState<string>('');
 
+  // 国土交通省APIから観測所データとカメラ情報を取得
+  useEffect(() => {
+    const fetchObservationData = async () => {
+      setLoadingStations(true);
+      try {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/river-info/${encodeURIComponent(river.name)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('River info response:', data);
+          
+          if (data.hasData) {
+            if (data.stations) {
+              setObservationStations(data.stations);
+            }
+            if (data.cameras) {
+              setApiCameras(data.cameras);
+            }
+            if (data.source) {
+              setDataSource(data.source);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('観測所データの取得に失敗:', error);
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+
+    fetchObservationData();
+  }, [river.name]);
+  
   // 国土交通省の川の防災情報からカメラデータを取得
   const nationalCameras = getRiverCameras(river.name);
   const cameras = nationalCameras.length > 0 ? nationalCameras : river.cameras || [];
@@ -109,6 +181,101 @@ export function RiverDetail({ river }: RiverDetailProps) {
 
         <TabsContent value="cameras" className="mt-4">
           <div className="grid gap-4">
+            {/* GraphQL/スクレイピングAPIから取得したライブカメラ情報 */}
+            {apiCameras.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-2">
+                  <Shield className="w-5 h-5" style={{ color: '#0372ac' }} />
+                  <h3 className="text-slate-900">ライブカメラ</h3>
+                  <Badge variant="outline" className="ml-2">
+                    {dataSource.includes('GraphQL') ? 'GraphQL API' : '公式データ'}
+                  </Badge>
+                </div>
+                
+                {apiCameras.map((camera) => (
+                  <Card key={camera.id} className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 rounded-lg" style={{ backgroundColor: '#0372ac' }}>
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-slate-900 mb-1">{camera.name}</h4>
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <MapPin className="w-3 h-3" />
+                            <span>{camera.location}</span>
+                          </div>
+                        </div>
+                        <Badge variant="outline">{camera.lastUpdated}</Badge>
+                      </div>
+                      
+                      <a 
+                        href={camera.cameraUrl || camera.detailUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full text-white py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+                        style={{ backgroundColor: '#0372ac' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#025a87'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0372ac'}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Video className="w-4 h-4" />
+                          <span>ライブカメラを見る</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                      </a>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
+            {/* 国土交通省APIから取得した観測所カメラ */}
+            {observationStations.length > 0 && observationStations.some(s => s.hasCameraUrl) && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-2">
+                  <Shield className="w-5 h-5" style={{ color: '#0372ac' }} />
+                  <h3 className="text-slate-900">国土交通省 観測所カメラ</h3>
+                  <Badge variant="outline" className="ml-2">公式</Badge>
+                </div>
+                
+                {observationStations.filter(s => s.hasCameraUrl).map((station) => (
+                  <Card key={station.stationId} className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 rounded-lg" style={{ backgroundColor: '#0372ac' }}>
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-slate-900 mb-1">{station.stationName}観測所</h4>
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <MapPin className="w-3 h-3" />
+                            <span>{station.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <a 
+                        href={station.cameraUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full text-white py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+                        style={{ backgroundColor: '#0372ac' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#025a87'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0372ac'}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Video className="w-4 h-4" />
+                          <span>ライブカメラを見る</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                      </a>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
             {cameras.length > 0 ? (
               cameras.map((camera) => (
                 <Card key={camera.id} className="overflow-hidden">
@@ -154,10 +321,94 @@ export function RiverDetail({ river }: RiverDetailProps) {
                 </Card>
               ))
             ) : (
-              <Card className="p-8 text-center">
-                <Video className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">現在、ライブカメラの設置はありません</p>
-              </Card>
+              <div className="space-y-4">
+                {/* メインCTA - 国土交通省 */}
+                <Card className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
+                  <div className="p-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: '#0372ac' }}>
+                        <Video className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-slate-900 mb-1">ライブカメラ映像を確認</h3>
+                        <p className="text-slate-600">国土交通省の川の防災情報サイトでご確認いただけます</p>
+                      </div>
+                    </div>
+                    
+                    <a 
+                      href={`https://www.river.go.jp/portal/#80&navi=search&keyword=${encodeURIComponent(river.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-white py-4 px-6 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                      style={{ backgroundColor: '#0372ac' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#025a87'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0372ac'}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        <span>国土交通省 川の防災情報で確認</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </div>
+                    </a>
+                  </div>
+                </Card>
+
+                {/* サブリンク - 都道府県・地域の防災情報 */}
+                <Card className="p-6">
+                  <h3 className="text-slate-900 mb-4 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-slate-600" />
+                    その他の情報源
+                  </h3>
+                  <div className="grid gap-3">
+                    {/* 都道府県の河川カメラページ */}
+                    <a 
+                      href={getPrefectureCameraUrl(river.prefecture)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Camera className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                        <div>
+                          <p className="text-slate-900">{river.prefecture}の河川監視カメラ</p>
+                          <p className="text-slate-500">{river.prefecture}が提供する河川情報</p>
+                        </div>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                    </a>
+
+                    {/* 地域の防災情報 */}
+                    <a 
+                      href={`https://www.google.com/search?q=${encodeURIComponent(river.prefecture + ' ' + river.name + ' ライブカメラ')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Video className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                        <div>
+                          <p className="text-slate-900">その他のカメラ映像を検索</p>
+                          <p className="text-slate-500">地域の防災サイトや自治体情報</p>
+                        </div>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                    </a>
+                  </div>
+                </Card>
+
+                {/* 情報提供の案内 */}
+                <Card className="p-6 bg-amber-50 border-amber-200">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-amber-500 p-2 rounded-lg flex-shrink-0">
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-slate-900 mb-1">カメラ設置状況について</p>
+                      <p className="text-slate-600">河川のライブカメラは、国や自治体によって設置・管理されています。設置状況は河川や地域によって異なります。</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             )}
           </div>
         </TabsContent>

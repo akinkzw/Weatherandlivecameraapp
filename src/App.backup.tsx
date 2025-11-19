@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
-import { CameraTest } from './components/CameraTest';
-import { RiverApiTest } from './components/RiverApiTest';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
-import { Search, ArrowUp } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
@@ -47,6 +45,12 @@ export interface BannerData {
   sp_image: {
     url: string;
   };
+  pc_image_2?: {
+    url: string;
+  };
+  sp_image_2?: {
+    url: string;
+  };
   icon: {
     url: string;
   };
@@ -70,24 +74,9 @@ function App() {
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [rivers, setRivers] = useState<River[]>([]);
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   
   // 都道府県セクションへの参照
   const prefecturesSectionRef = useRef<HTMLDivElement>(null);
-
-  // URLパラメータからテストモードを確認
-  const urlParams = new URLSearchParams(window.location.search);
-  const testMode = urlParams.get('test');
-
-  // テストモードの場合はテストコンポーネントを表示
-  if (testMode === 'camera') {
-    return <CameraTest />;
-  }
-  
-  // API テストモードの場合
-  if (testMode === 'api') {
-    return <RiverApiTest />;
-  }
 
   // 川のデータを取得
   useEffect(() => {
@@ -105,7 +94,7 @@ function App() {
           console.log('川データ取得成功:', data);
           setRivers(data.rivers || []);
         } else {
-          console.error('川データの取失敗しました:', response.status);
+          console.error('川データの取得に失敗しました:', response.status);
         }
       } catch (error) {
         console.error('川データの取得エラー:', error);
@@ -130,7 +119,6 @@ function App() {
         if (response.ok) {
           const data = await response.json();
           console.log('バナーデータ取得成功:', data);
-          console.log('完全なバナーデータ:', JSON.stringify(data, null, 2));
           setBannerData(data);
         } else {
           console.error('バナーデータの取得に失敗しました:', response.status, response.statusText);
@@ -181,115 +169,88 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ホームに戻る（全フィルタリセット）
-  const handleResetToHome = () => {
-    setSelectedArea('all');
-    setSelectedRegion('all');
-    setSelectedPrefecture('all');
-    setSearchQuery('');
-    scrollToTop();
-  };
-
-  // スクロールイベントハンドラ
-  const handleScroll = () => {
-    if (window.scrollY > 300) {
-      setShowScrollTop(true);
-    } else {
-      setShowScrollTop(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  // モバイル判定
-  const isMobile = () => {
-    return window.innerWidth <= 768;
-  };
-
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header 
-        className="relative shadow-md border-b-4 cursor-pointer overflow-hidden" 
-        style={{ 
-          borderColor: '#0372ac'
-        }}
-        onClick={handleResetToHome}
-      >
-        {/* グラデーション背景を持つ親要素 */}
-        <div
-          style={{
-            background: 'linear-gradient(to bottom, #97d0ed 0%, #97d0ed 60%, rgba(151, 208, 237, 0.3) 100%)'
-          }}
-        >
-          {/* Background Image */}
-          <div className="relative pt-[165px] md:pt-[160px]">
-            {bannerData && (
-              <>
-                {/* PC用画像 */}
-                <div className="hidden md:block absolute top-0 left-0 w-full h-[220px]">
-                  <ImageWithFallback
-                    src={bannerData.pc_image?.url}
-                    alt="川の風景"
-                    className="w-full h-full object-contain object-top"
-                  />
-                </div>
-                {/* SP用画像 */}
-                <div className="block md:hidden absolute top-0 left-0 w-full h-[190px]">
-                  <ImageWithFallback
-                    src={bannerData.sp_image?.url}
-                    alt="川の風景"
-                    className="w-full h-full object-contain object-top"
-                  />
-                </div>
-              </>
-            )}
-          </div>
+      <header className="relative sticky top-0 z-10 overflow-hidden">
+        {/* Background Image - PC */}
+        <div className="absolute inset-0 hidden md:block">
+          <ImageWithFallback
+            src={bannerData?.pc_image_2?.url || bannerData?.pc_image?.url || "https://images.unsplash.com/photo-1699202538405-be2b2b08e5f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqYXBhbiUyMHJpdmVyJTIwbmF0dXJlfGVufDF8fHx8MTc2MzAzMTY1OXww&ixlib=rb-4.1.0&q=80&w=1080"}
+            alt="日本の川"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ backgroundColor: 'rgba(22, 91, 125, 0.7)' }} />
+        </div>
 
-          {/* Header Content */}
-          <div className="relative py-6">
-            <div 
-              className="container mx-auto px-4" 
-              onClick={(e) => e.stopPropagation()}
+        {/* Background Image - SP */}
+        <div className="absolute inset-0 md:hidden">
+          <ImageWithFallback
+            src={bannerData?.sp_image_2?.url || bannerData?.sp_image?.url || "https://images.unsplash.com/photo-1699202538405-be2b2b08e5f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqYXBhbiUyMHJpdmVyJTIwbmF0dXJlfGVufDF8fHx8MTc2MzAzMTY1OXww&ixlib=rb-4.1.0&q=80&w=1080"}
+            alt="日本の川"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ backgroundColor: 'rgba(22, 91, 125, 0.7)' }} />
+        </div>
+
+        {/* Header Content */}
+        <div className="relative container mx-auto px-4 py-10">
+          <div className="flex items-center gap-4 mb-8">
+            {bannerData?.icon?.url ? (
+              <ImageWithFallback
+                src={bannerData.icon.url}
+                alt="川アイコン"
+                className="w-12 h-12 drop-shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                onClick={scrollToTop}
+              />
+            ) : (
+              <div 
+                className="w-12 h-12 bg-white/20 rounded-lg cursor-pointer hover:scale-110 transition-transform" 
+                onClick={scrollToTop}
+              />
+            )}
+            <h1 
+              className="text-white tracking-wide drop-shadow-lg text-[33.6px] md:text-[48px] cursor-pointer hover:opacity-90 transition-opacity" 
+              style={{ fontFamily: "'Sawarabi Mincho', serif" }}
+              onClick={scrollToTop}
             >
-              <div className="flex gap-4 flex-wrap max-w-3xl">
-                <div className="flex-1 min-w-[250px] relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    placeholder="川名を検索..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setSelectedArea('all');
-                    }}
-                    className="pl-12 h-12 bg-white/95 backdrop-blur-sm text-lg border-2 border-transparent focus:border-white/50 transition-all"
-                    style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
-                  />
-                </div>
-                
-                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                  <SelectTrigger className="h-12 bg-white/95 backdrop-blur-sm text-lg border-2 border-transparent focus:border-white/50 transition-all" style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全国</SelectItem>
-                    <SelectItem value="hokkaido-tohoku">北海道・東北</SelectItem>
-                    <SelectItem value="kanto">関東</SelectItem>
-                    <SelectItem value="koshinetsu-hokuriku">甲信越・北陸</SelectItem>
-                    <SelectItem value="tokai">東海</SelectItem>
-                    <SelectItem value="kansai">関西</SelectItem>
-                    <SelectItem value="chugoku">中国</SelectItem>
-                    <SelectItem value="shikoku">四国</SelectItem>
-                    <SelectItem value="kyushu-okinawa">九州・沖縄</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              川の空もよう
+            </h1>
+          </div>
+          
+          <div className="flex gap-4 flex-wrap max-w-3xl">
+            <div className="flex-1 min-w-[250px] relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                placeholder="川名を検索..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedArea('all');
+                }}
+                className="pl-12 h-12 bg-white/95 backdrop-blur-sm text-lg border-2 border-transparent focus:border-white/50 transition-all"
+              />
             </div>
+            
+            <Select value={selectedRegion} onValueChange={(value) => {
+              setSelectedRegion(value);
+              setSelectedArea('all');
+            }}>
+              <SelectTrigger className="w-[200px] h-12 bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-white/50">
+                <SelectValue placeholder="地域を選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全国</SelectItem>
+                <SelectItem value="hokkaido">北海道</SelectItem>
+                <SelectItem value="tohoku">東北</SelectItem>
+                <SelectItem value="kanto">関東</SelectItem>
+                <SelectItem value="chubu">中部</SelectItem>
+                <SelectItem value="kinki">近畿</SelectItem>
+                <SelectItem value="chugoku">中国</SelectItem>
+                <SelectItem value="shikoku">四国</SelectItem>
+                <SelectItem value="kyushu">九州</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>
@@ -298,17 +259,17 @@ function App() {
       <div className="bg-white border-b border-slate-200 py-8">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-3 mb-6">
-            {bannerData?.icon?.url && (
+            {bannerData?.icon_2?.url && (
               <ImageWithFallback
-                src={bannerData.icon.url}
+                src={bannerData.icon_2.url}
                 alt="装飾アイコン"
                 className="w-8 h-8 object-contain"
               />
             )}
-            <h2 className="font-bold" style={{ fontFamily: 'Noto Sans JP, sans-serif', color: '#0372ac' }}>地方から探す</h2>
-            {bannerData?.icon?.url && (
+            <h2 className="font-mincho font-bold" style={{ color: '#0372ac' }}>地方から探す</h2>
+            {bannerData?.icon_3?.url && (
               <ImageWithFallback
-                src={bannerData.icon.url}
+                src={bannerData.icon_3.url}
                 alt="装飾アイコン"
                 className="w-8 h-8 object-contain"
               />
@@ -319,90 +280,90 @@ function App() {
             {/* Region Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Button
-                variant="ghost"
+                variant={selectedArea === 'hokkaido-tohoku' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('hokkaido-tohoku')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'hokkaido-tohoku' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>北海道・東北地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>北海道/青森/岩手/宮城/秋田/山形/福島</div>
+                  <div className="font-semibold font-mincho mb-2">北海道・東北地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">北海道/青森/岩手/宮城/秋田/山形/福島</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'kanto' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('kanto')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'kanto' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>関東地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>茨城/栃木/群馬/埼玉/千葉/東京/神奈川</div>
+                  <div className="font-semibold font-mincho mb-2">関東地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">茨城/栃木/群馬/埼玉/千葉/東京/神奈川</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'koshinetsu-hokuriku' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('koshinetsu-hokuriku')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'koshinetsu-hokuriku' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>甲信越・北陸地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>山梨/新潟/長野/富山/石川/福井</div>
+                  <div className="font-semibold font-mincho mb-2">甲信越・北陸地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">山梨/新潟/長野/富山/石川/福井</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'tokai' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('tokai')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'tokai' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>東海地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>愛知/岐阜/静岡/三重</div>
+                  <div className="font-semibold font-mincho mb-2">東海地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">愛知/岐阜/静岡/三重</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'kansai' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('kansai')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'kansai' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>関西地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>滋賀/京都/大阪/兵庫/奈良/和歌山</div>
+                  <div className="font-semibold font-mincho mb-2">関西地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">滋賀/京都/大阪/兵庫/奈良/和歌山</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'chugoku' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('chugoku')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'chugoku' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>中国地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>鳥取/島根/岡山/広島/山口</div>
+                  <div className="font-semibold font-mincho mb-2">中国地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">鳥取/島根/岡山/広島/山口</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'shikoku' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('shikoku')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'shikoku' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>四国地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>徳島/香川/愛媛/高知</div>
+                  <div className="font-semibold font-mincho mb-2">四国地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">徳島/香川/愛媛/高知</div>
                 </div>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={selectedArea === 'kyushu-okinawa' ? 'default' : 'outline'}
                 onClick={() => handleAreaClick('kyushu-okinawa')}
-                className={`region-button h-auto py-4 px-4 text-left justify-start ${selectedArea === 'kyushu-okinawa' ? 'selected' : ''}`}
+                className="h-auto py-4 px-4 text-left justify-start"
               >
                 <div className="w-full">
-                  <div className="font-semibold mb-2" style={{ color: '#204670' }}>九州・沖縄地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>福岡/佐賀/長崎/熊本/大分/宮崎/鹿児島/沖縄</div>
+                  <div className="font-semibold font-mincho mb-2">九州・沖縄地方</div>
+                  <div className="text-xs opacity-70 leading-relaxed">福岡/佐賀/長崎/熊本/大分/宮崎/鹿児島/沖縄</div>
                 </div>
               </Button>
             </div>
@@ -412,15 +373,14 @@ function App() {
               <div className="mt-6" ref={prefecturesSectionRef}>
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <div className="h-px bg-slate-300 flex-1"></div>
-                  <span className="text-sm px-3" style={{ color: '#204670' }}>都道府県</span>
+                  <span className="text-slate-600 text-sm px-3">都道府県</span>
                   <div className="h-px bg-slate-300 flex-1"></div>
                 </div>
                 <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                   <Button
                     variant={selectedPrefecture === 'all' ? 'default' : 'outline'}
                     onClick={() => setSelectedPrefecture('all')}
-                    className="h-auto py-3"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === 'all' ? '' : '#204670' }}
+                    className="h-auto py-3 font-mincho"
                   >
                     すべて
                   </Button>
@@ -442,8 +402,7 @@ function App() {
                         key={pref}
                         variant={selectedPrefecture === pref ? 'default' : 'outline'}
                         onClick={() => setSelectedPrefecture(pref)}
-                        className="h-auto py-3"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === pref ? '' : '#204670' }}
+                        className="h-auto py-3 font-mincho"
                       >
                         {displayName}
                       </Button>
@@ -484,18 +443,6 @@ function App() {
           {selectedRiver && <RiverDetail river={selectedRiver} />}
         </DialogContent>
       </Dialog>
-
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <Button
-          variant="default"
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all z-50 p-0 flex items-center justify-center"
-          style={{ backgroundColor: '#0372ac' }}
-          onClick={scrollToTop}
-        >
-          <ArrowUp className="w-6 h-6" />
-        </Button>
-      )}
     </div>
   );
 }

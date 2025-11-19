@@ -29,24 +29,27 @@ export function RiverList({
 }: RiverListProps) {
   const filteredRivers = useMemo(() => {
     return rivers.filter(river => {
-      // 地方フィルタリング
-      let matchesArea = true;
-      if (selectedArea !== 'all') {
+      // セレクトボックスまたは地方ボタンからのフィルタリング
+      let matchesAreaOrRegion = true;
+      
+      if (selectedRegion !== 'all') {
+        // セレクトボックスで地方が選択されている場合
+        const prefectures = areaToRegionMap[selectedRegion] || [];
+        matchesAreaOrRegion = prefectures.some(pref => river.prefecture.includes(pref));
+      } else if (selectedArea !== 'all') {
+        // 地方ボタンで地方が選択されている場合
         const prefectures = areaToRegionMap[selectedArea] || [];
-        matchesArea = prefectures.some(pref => river.prefecture.includes(pref));
+        matchesAreaOrRegion = prefectures.some(pref => river.prefecture.includes(pref));
       }
 
       // 都道府県フィルタリング
       const matchesPrefecture = selectedPrefecture === 'all' || river.prefecture === selectedPrefecture;
-
-      // 地域フィルタリング
-      const matchesRegion = selectedRegion === 'all' || river.region === selectedRegion;
       
-      // ��索クエリフィルタリング
+      // 検索クエリフィルタリング
       const matchesSearch = river.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            river.prefecture.toLowerCase().includes(searchQuery.toLowerCase());
       
-      return matchesArea && matchesPrefecture && matchesRegion && matchesSearch;
+      return matchesAreaOrRegion && matchesPrefecture && matchesSearch;
     });
   }, [rivers, selectedRegion, searchQuery, selectedArea, selectedPrefecture, areaToRegionMap]);
 

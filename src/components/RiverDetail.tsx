@@ -2,7 +2,7 @@ import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Camera, MapPin, Droplets, Video, CloudRain, Calendar, ExternalLink, Shield } from 'lucide-react';
+import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield } from "lucide-react";
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
@@ -15,15 +15,23 @@ interface RiverDetailProps {
 }
 
 interface ObservationStation {
-  stationId: string;
-  stationName: string;
-  riverName: string;
-  prefecture: string;
-  location: string;
-  cameraUrl?: string;
-  waterLevelUrl?: string;
+  id?: string;
+  stationId?: string;
+  title?: string;
+  stationName?: string;
+  observationPlaceName?: string;
+  riverName?: string;
+  prefecture?: string;
+  municipalityName?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
   lat?: number;
   lon?: number;
+  cameraUrl?: string;
+  url?: string;
+  waterLevelUrl?: string;
+  lastUpdateDateTime?: string;
   hasCameraUrl?: boolean;
   hasWaterLevelUrl?: boolean;
 }
@@ -45,13 +53,52 @@ export function RiverDetail({ river }: RiverDetailProps) {
   const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
   const [loadingStations, setLoadingStations] = useState(false);
   const [dataSource, setDataSource] = useState<string>('');
+  const [apiWeather, setApiWeather] = useState<any[]>([]);
+  const [currentWeather, setCurrentWeather] = useState<any>(null);
 
-  // 国土交通省APIから観測所データとカメラ情報を取得
+  // 国土交通省DPF GraphQL APIから観測所データとカメラ情報を取得
   useEffect(() => {
     const fetchObservationData = async () => {
       setLoadingStations(true);
       try {
-        const response = await fetch(
+        // まずDPF GraphQL APIを試す
+        const dpfResponse = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/river-observations/${encodeURIComponent(river.name)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`
+            }
+          }
+        );
+        
+        if (dpfResponse.ok) {
+          const data = await dpfResponse.json();
+          console.log('DPF GraphQL API response:', data);
+          
+          if (data.hasData) {
+            // observations を stations として設定
+            if (data.observations) {
+              setObservationStations(data.observations);
+            }
+            if (data.cameras) {
+              setApiCameras(data.cameras);
+            }
+            if (data.source) {
+              setDataSource(data.source);
+            }
+            if (data.weather && data.weather.length > 0) {
+              setApiWeather(data.weather);
+            }
+            if (data.currentWeather) {
+              setCurrentWeather(data.currentWeather);
+            }
+            return; // 成功したら終了
+          }
+        }
+        
+        // フォールバック: HTMLスクレイピング
+        console.log('Falling back to HTML scraping...');
+        const fallbackResponse = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/river-info/${encodeURIComponent(river.name)}`,
           {
             headers: {
@@ -60,9 +107,9 @@ export function RiverDetail({ river }: RiverDetailProps) {
           }
         );
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log('River info response:', data);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          console.log('Fallback scraping response:', data);
           
           if (data.hasData) {
             if (data.stations) {
@@ -72,7 +119,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
               setApiCameras(data.cameras);
             }
             if (data.source) {
-              setDataSource(data.source);
+              setDataSource(data.source + ' (Fallback)');
             }
           }
         }
@@ -90,13 +137,14 @@ export function RiverDetail({ river }: RiverDetailProps) {
   const nationalCameras = getRiverCameras(river.name);
   const cameras = nationalCameras.length > 0 ? nationalCameras : river.cameras || [];
   
-  // 天気データ（空配列の場合もデフォルトデータを使用）
-  const weather = (river.weather && river.weather.length > 0) ? river.weather : [
-    { date: '今日', temp: 14, condition: '晴れ', precipitation: 0, icon: 'sun' },
-    { date: '明日', temp: 16, condition: '曇り', precipitation: 0, icon: 'cloud' },
-    { date: '明後日', temp: 13, condition: '雨', precipitation: 8, icon: 'rain' },
-    { date: '3日後', temp: 11, condition: '曇り', precipitation: 2, icon: 'cloud' }
-  ];
+  // 天気データ（APIからの取得を優先、なければデフォルト）
+  const weather = apiWeather.length > 0 ? apiWeather : 
+    (river.weather && river.weather.length > 0) ? river.weather : [
+      { date: '今日', temp: 14, condition: '晴れ', precipitation: 0, icon: 'sun' },
+      { date: '明日', temp: 16, condition: '曇り', precipitation: 0, icon: 'cloud' },
+      { date: '明後日', temp: 13, condition: '雨', precipitation: 8, icon: 'rain' },
+      { date: '3日後', temp: 11, condition: '曇り', precipitation: 2, icon: 'cloud' }
+    ];
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('晴')) return '☀️';
@@ -159,6 +207,42 @@ export function RiverDetail({ river }: RiverDetailProps) {
 
         <TabsContent value="weather" className="mt-4">
           <Card className="p-6">
+            {/* 現在の天気 */}
+            {currentWeather && (
+              <div className="mb-6 pb-6 border-b border-slate-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <CloudRain className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-slate-900">現在の天気</h3>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="flex items-center justify-around gap-4">
+                    <div className="flex items-center gap-2">
+                      <Thermometer className="w-5 h-5 text-red-500" />
+                      <div>
+                        <p className="text-slate-600 text-sm">気温</p>
+                        <p className="text-slate-900">{currentWeather.temp}°C</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Cloud className="w-5 h-5 text-slate-500" />
+                      <div>
+                        <p className="text-slate-600 text-sm">天気</p>
+                        <p className="text-slate-900">{currentWeather.condition}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Droplets className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-slate-600 text-sm">湿度</p>
+                        <p className="text-slate-900">{currentWeather.humidity}%</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 予報 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {weather.map((day, index) => (
                 <div key={index} className="bg-slate-50 rounded-lg p-4 text-center">
@@ -171,7 +255,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
                   <p className="text-slate-700 mb-2">{day.temp}°C</p>
                   <div className="flex items-center justify-center gap-1">
                     <Droplets className="w-3 h-3 text-blue-500" />
-                    <span className="text-slate-600">{day.precipitation}mm</span>
+                    <span className="text-slate-600">{day.precipitation}%</span>
                   </div>
                 </div>
               ))}
@@ -188,7 +272,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
                   <Shield className="w-5 h-5" style={{ color: '#0372ac' }} />
                   <h3 className="text-slate-900">ライブカメラ</h3>
                   <Badge variant="outline" className="ml-2">
-                    {dataSource.includes('GraphQL') ? 'GraphQL API' : '公式データ'}
+                    {dataSource.includes('GraphQL') ? 'DPF GraphQL API' : dataSource.includes('HTML') ? 'HTML Scraping' : '公式データ'}
                   </Badge>
                 </div>
                 
@@ -230,33 +314,44 @@ export function RiverDetail({ river }: RiverDetailProps) {
               </div>
             )}
             
-            {/* 国土交通省APIから取得した観測所カメラ */}
+            {/* 国土交通省DPF APIから取得た観測所情報 */}
             {observationStations.length > 0 && observationStations.some(s => s.hasCameraUrl) && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 px-2">
                   <Shield className="w-5 h-5" style={{ color: '#0372ac' }} />
-                  <h3 className="text-slate-900">国土交通省 観測所カメラ</h3>
-                  <Badge variant="outline" className="ml-2">公式</Badge>
+                  <h3 className="text-slate-900">観測所カメラ</h3>
+                  <Badge variant="outline" className="ml-2">
+                    {dataSource.includes('GraphQL') ? 'DPF API' : '公式データ'}
+                  </Badge>
                 </div>
                 
                 {observationStations.filter(s => s.hasCameraUrl).map((station) => (
-                  <Card key={station.stationId} className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
+                  <Card key={station.id || station.stationId} className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
                     <div className="p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 rounded-lg" style={{ backgroundColor: '#0372ac' }}>
                           <Camera className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-slate-900 mb-1">{station.stationName}観測所</h4>
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <MapPin className="w-3 h-3" />
-                            <span>{station.location}</span>
+                          <h4 className="text-slate-900 mb-1">
+                            {station.observationPlaceName || station.stationName}観測所
+                          </h4>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <MapPin className="w-3 h-3" />
+                              <span>{station.prefecture} {station.municipalityName || station.location}</span>
+                            </div>
+                            {station.lastUpdateDateTime && (
+                              <span className="text-slate-500">
+                                更新: {new Date(station.lastUpdateDateTime).toLocaleString('ja-JP')}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                       
                       <a 
-                        href={station.cameraUrl}
+                        href={station.cameraUrl || station.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block w-full text-white py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
@@ -266,7 +361,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
                       >
                         <div className="flex items-center justify-center gap-2">
                           <Video className="w-4 h-4" />
-                          <span>ライブカメラを見る</span>
+                          <span>観測所情報を見る</span>
                           <ExternalLink className="w-4 h-4" />
                         </div>
                       </a>

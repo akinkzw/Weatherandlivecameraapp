@@ -2,6 +2,19 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
+import { getRiverCoordinates } from "./river_coordinates.tsx";
+import { getRiverCameraInfo } from './river_graphql.tsx';
+import { findStationById } from './river_observation_data.tsx';
+import { 
+  fetchAllRiverObservations, 
+  filterByRiverName,
+  extractCameraInfo,
+  type RiverObservationMetadata 
+} from './dpf_graphql.tsx';
+import { getWeatherForecast, getCurrentWeather } from './openweather.tsx';
+import { estimateRiverStatusFromRainfall, detectRiverScale } from './rainfall_estimator.tsx';
+import { addManualRiver, getRiverRainfallStatus, addRiversBulk, getPrefectureRegion } from './manual_river_endpoints.tsx';
+
 const app = new Hono();
 
 // Enable logger
@@ -16,15 +29,183 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
+    credentials: true,
   }),
 );
+
+// プリフライトリクエスト（OPTIONS）を明示的に処理
+app.options("/*", (c) => {
+  return c.text("", 204, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "600",
+  });
+});
 
 // Health check endpoint
 app.get("/make-server-5f24a873/health", (c) => {
   return c.json({ status: "ok" });
 });
 
-// microCMSからバナーデータを取得するエンドポイント
+// 環境変数のチェックエンドポイント（デバッグ用）
+app.get("/make-server-5f24a873/env-check", (c) => {
+  const dpfApiKey = Deno.env.get('DPF_API_KEY');
+  const expectedApiKey = 's7sxiAxrH4SXB9sbcpbVDkJPc_j0y~v_'; // 期待されるAPIキー
+  
+  const envVars = {
+    OPENWEATHER_API_KEY: Deno.env.get('OPENWEATHER_API_KEY') ? 'SET' : 'NOT SET',
+    OPENWEATHER_API_KEY_LENGTH: Deno.env.get('OPENWEATHER_API_KEY')?.length || 0,
+    DPF_API_KEY: dpfApiKey ? 'SET' : 'NOT SET',
+    DPF_API_KEY_LENGTH: dpfApiKey?.length || 0,
+    DPF_API_KEY_VALUE: dpfApiKey || 'NOT SET', // 完全な値を表示
+    DPF_API_KEY_PREVIEW: dpfApiKey ? `${dpfApiKey.substring(0, 10)}...${dpfApiKey.substring(dpfApiKey.length - 4)}` : 'NOT SET',
+    DPF_API_KEY_MATCHES_EXPECTED: dpfApiKey === expectedApiKey, // 期待値と一致するか
+    EXPECTED_API_KEY_PREVIEW: `${expectedApiKey.substring(0, 10)}...${expectedApiKey.substring(expectedApiKey.length - 4)}`,
+    MICROCMS_API_KEY: Deno.env.get('MICROCMS_API_KEY') ? 'SET' : 'NOT SET',
+    MICROCMS_API_KEY_LENGTH: Deno.env.get('MICROCMS_API_KEY')?.length || 0,
+  };
+  
+  console.log('Environment Variables Check:', envVars);
+  console.log('Full DPF API Key:', dpfApiKey);
+  console.log('Expected DPF API Key:', expectedApiKey);
+  console.log('API Keys Match:', dpfApiKey === expectedApiKey);
+  
+  return c.json({
+    message: 'Environment Variables Status',
+    variables: envVars,
+    timestamp: new Date().toISOString(),
+    warning: dpfApiKey !== expectedApiKey ? '⚠️ DPF_API_KEYが期待される値と一致しません。環境変数を更新してください。' : null,
+  });
+});
+
+// DPF API接続テスト用エンドポイント
+app.get("/make-server-5f24a873/test-dpf", async (c) => {
+  try {
+    const apiKey = Deno.env.get('DPF_API_KEY');
+    
+    console.log('=== DPF API Connection Test ===');
+    console.log('API Key exists:', !!apiKey);
+    console.log('API Key length:', apiKey?.length || 0);
+    console.log('Full API Key:', apiKey);
+    
+    if (!apiKey) {
+      return c.json({ 
+        success: false, 
+        error: 'DPF_API_KEY is not set in environment variables',
+        suggestion: 'Please set the DPF_API_KEY environment variable'
+      });
+    }
+  
+  const endpoint = 'https://www.mlit-data.jp/api/v1/graphql';
+  
+  // DPFドキュメントに基づく正しいクエリ（hwq_stage = 水位データ）
+  const correctQuery = `query GetRiverObservationMetadata { getAllData(size: 1000, attributeFilter: {AND: [{attributeName: "DPF:catalog_id", is: "hwq"}, {attributeName: "DPF:dataset_id", is: "hwq_stage"}]}) { data { id title metadata } } }`;
+  
+  // 複数の認証ヘッダーパターンを試す
+  const testCases = [
+    {
+      name: 'ヘッダー1: apikey（Supabaseスタイル）⭐推奨',
+      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+      query: correctQuery
+    },
+    {
+      name: 'ヘッダー2: X-Dpf-Api-Key（標準）',
+      headers: { 'Content-Type': 'application/json', 'X-Dpf-Api-Key': apiKey },
+      query: correctQuery
+    },
+    {
+      name: 'ヘッダー3: X-DPF-API-Key（大文字）',
+      headers: { 'Content-Type': 'application/json', 'X-DPF-API-Key': apiKey },
+      query: correctQuery
+    },
+    {
+      name: 'ヘッダー4: Authorization Bearer',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      query: correctQuery
+    },
+    {
+      name: 'ヘッダー5: X-API-Key',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      query: correctQuery
+    }
+  ];
+  
+  const results = [];
+  
+  for (const testCase of testCases) {
+    const headers = testCase.headers;
+    
+    console.log(`\n=== Testing: ${testCase.name} ===`);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+    console.log('Query:', testCase.query);
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ query: testCase.query }),
+      });
+      
+      const responseText = await response.text();
+      
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        responseData = { rawText: responseText.substring(0, 500) };
+      }
+      
+      results.push({
+        testName: testCase.name,
+        headersUsed: Object.keys(headers).filter(k => k !== 'Content-Type'),
+        status: response.status,
+        statusText: response.statusText,
+        success: response.ok,
+        dataCount: responseData?.data?.getAllData?.data?.length || 0,
+        hasErrors: !!responseData?.errors,
+        errors: responseData?.errors,
+        sampleData: responseData?.data?.getAllData?.data?.[0] || null,
+        response: response.ok ? responseData : { error: responseData }
+      });
+      
+      console.log(`Result: ${response.status} - ${results[results.length - 1].dataCount} items`);
+      
+    } catch (error) {
+      results.push({
+        testName: testCase.name,
+        headersUsed: Object.keys(headers).filter(k => k !== 'Content-Type'),
+        success: false,
+        error: String(error)
+      });
+    }
+  }
+  
+    return c.json({
+      success: results.some(r => r.success),
+      apiKeyLength: apiKey.length,
+      apiKeyPreview: `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`,
+      fullApiKey: apiKey,
+      apiKey: apiKey, // 追加: わかりやすくするため
+      apiKeyUsed: apiKey, // 追加: データ同期で使用されるAPIキーと同じ
+      envVarName: 'DPF_API_KEY', // 追加: どの環境変数を使用しているか明示
+      endpoint,
+      results,
+      recommendation: results.every(r => !r.success) 
+        ? 'すべてのクエリパターンが失敗しました。DPF管理画面でAPIキーの権限を確認してください。'
+        : '一部のクエリパターンが成功しました。成功したパターンを使用してください。'
+    });
+  } catch (error) {
+    console.error('Error testing DPF API:', error);
+    return c.json({
+      success: false,
+      error: String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 500);
+  }
+});
+
+// microCMSからバ��ーデータを取得するエンドポイント
 app.get("/make-server-5f24a873/banner", async (c) => {
   try {
     const apiKey = Deno.env.get('MICROCMS_API_KEY');
@@ -92,6 +273,61 @@ app.get("/make-server-5f24a873/rivers", async (c) => {
     return c.json({ error: 'Failed to fetch rivers' }, 500);
   }
 });
+
+// 都道府県から地方を判定するヘルパー関数
+function getPrefectureRegion(prefecture: string): string {
+  const regionMap: { [key: string]: string } = {
+    '北海道': 'hokkaido-tohoku',
+    '青森県': 'hokkaido-tohoku',
+    '岩手県': 'hokkaido-tohoku',
+    '宮城県': 'hokkaido-tohoku',
+    '秋田県': 'hokkaido-tohoku',
+    '山形県': 'hokkaido-tohoku',
+    '福島県': 'hokkaido-tohoku',
+    '茨城県': 'kanto',
+    '栃木県': 'kanto',
+    '群馬県': 'kanto',
+    '埼玉県': 'kanto',
+    '千葉県': 'kanto',
+    '東京都': 'kanto',
+    '神奈川県': 'kanto',
+    '新潟県': 'koshinetsu-hokuriku',
+    '富山県': 'koshinetsu-hokuriku',
+    '石川県': 'koshinetsu-hokuriku',
+    '福井県': 'koshinetsu-hokuriku',
+    '山梨県': 'koshinetsu-hokuriku',
+    '長野県': 'koshinetsu-hokuriku',
+    '岐阜県': 'tokai',
+    '静岡県': 'tokai',
+    '愛知県': 'tokai',
+    '三重県': 'tokai',
+    '滋賀県': 'kansai',
+    '京都府': 'kansai',
+    '大阪府': 'kansai',
+    '兵庫県': 'kansai',
+    '奈良県': 'kansai',
+    '和歌山県': 'kansai',
+    '鳥取県': 'chugoku',
+    '島根県': 'chugoku',
+    '岡山県': 'chugoku',
+    '広島県': 'chugoku',
+    '山口県': 'chugoku',
+    '徳島県': 'shikoku',
+    '香川県': 'shikoku',
+    '愛媛県': 'shikoku',
+    '高���県': 'shikoku',
+    '福岡県': 'kyushu-okinawa',
+    '佐賀県': 'kyushu-okinawa',
+    '長崎県': 'kyushu-okinawa',
+    '熊本県': 'kyushu-okinawa',
+    '大分県': 'kyushu-okinawa',
+    '宮崎県': 'kyushu-okinawa',
+    '鹿児島県': 'kyushu-okinawa',
+    '沖縄県': 'kyushu-okinawa'
+  };
+  
+  return regionMap[prefecture] || 'other';
+}
 
 // 北海道の川を追加登録するエンドポイント（ID 201-298）
 app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-2", async (c) => {
@@ -243,7 +479,7 @@ app.post("/make-server-5f24a873/add-rivers-batch-3", async (c) => {
       '知来別川', '一号線川', '七号線川', '三号線川', '二号線川',
       '五号線川', '八号線川', '六号線川', '四号線川', '小出川',
       '牧場川', '苗畑川', '鬼志別川', 'エコペー号線川', 'エコペニ号線川',
-      'カツラ川', '猿骨三号線川', '猿骨二号線川', '猿骨四号線川', '白百合川',
+      'カツラ川', '猿骨三号線川', '猿骨二号���川', '猿骨四号線川', '白百合川',
       '猿骨川', 'エコペ川', 'タンネペナイ川', 'エサヌカ川', 'カネユ川',
       'キモマ沼川', 'セキタンベツ川', 'ヒトシベツー号線川', 'ヒトシベツ二号線川', 'ヒトシベツ川',
       'ポロナイー号線川', 'ポロナイ川', 'ポロー号線川', 'ポロ川', 'ポンポロ川',
@@ -252,11 +488,11 @@ app.post("/make-server-5f24a873/add-rivers-batch-3", async (c) => {
       '猿払九号線川', '猿二号線川', '猿払五号線川', '猿払八号線', '猿払六号線川',
       '猿払十号線川', '猿払四号線川', '錦川', '猿払川', 'カリベツ川',
       'ニタチナイ川', 'あめの沢川', 'アサヒの沢川', 'アザミノ沢川', 'イワナノ沢川',
-      'ウノサワ川', 'エイコの沢川', 'オサチナイ川', 'オサナイ川', 'オビンナイ川',
+      'ウノサワ川', 'エイコの沢��', 'オサチナイ川', 'オサナイ川', 'オビンナイ川',
       'コンクリート沢川', 'チュピタウシュナイ川', 'チョッコノ沢川', 'ナカヒロノ沢川', 'バンケノ沢川',
       'ポンウツナイ川', 'ポンケイ川', 'ポンピラナイ川', 'ポン仁達内川', 'マスノ沢川',
       'マップの沢川', 'ヤスベツ川', 'ヤツメの沢川', 'ヤナドマリノ沢川', 'ヨシヨシノ沢川',
-      'ルカシュナイル', '一ノ沢川', '一号ノ沢川', '一号沢川', '一己内川',
+      'ル���シュナイル', '一ノ沢川', '���号ノ沢川', '一号沢川', '一己内川',
       '一線川', '七ノ沢川', '三ノ沢川', '中島ノ沢川', '中島川',
       '二号沢川', '七号沢', '七号沢川', '五号沢川'
     ];
@@ -362,10 +598,10 @@ app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-1", async (c) => {
     const hokkaidoRivers = [
       // 主要河川
       '石狩川', '天塩川', '十勝川', '釧路川', '網走川', '常呂川', '湧別川', '渚滑川',
-      '留萌川', '増毛川', '尻別川', '後志利別川', '鵡川', '沙流川', '静内川', '新冠川',
+      '留萌川', '���毛川', '尻別川', '後志利別川', '鵡川', '沙流川', '静内川', '新冠川',
       // 石狩川水系
       '空知川', '夕張川', '幾春別川', '美唄川', '奈井江川', '当別川', '篠津川', 'ウツナイ川',
-      '豊平川', '厚別川', '月寒川', '望月寒川', '精進川', '琴似川', '新川', '伏籠川',
+      '豊平川', '厚別川', '月寒川', '望月寒川', '精��川', '琴似川', '新川', '伏籠川',
       '茨戸川', '創成川', '発寒川', 'サクシュコトニ川', '星置川', '手稲川', '軽川', '中の川',
       // 十勝川水系
       '札内川', '帯広川', '売買川', '音更川', '然別川', 'ペンケ川', 'パンケ川', '利別川',
@@ -378,7 +614,7 @@ app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-1", async (c) => {
       // 常呂川水系
       '無加川', '訓子府川', '仁頃川',
       // 湧別川水系
-      '社名淵川', 'ルベシベ川', 'サロマ川',
+      '��名淵川', 'ルベシベ川', 'サロマ川',
       // 渚滑川水系
       'チミケップ湖', '滝ノ上川',
       // 尻別川水系
@@ -386,7 +622,7 @@ app.post("/make-server-5f24a873/add-hokkaido-rivers-batch-1", async (c) => {
       // 後志利別川水系
       '真駒内川', '奥沢川', '厚沢部川',
       // 鵡川水系
-      '双珠別川', '穂別川', 'ルベシベ川',
+      '��珠別川', '穂別川', 'ルベシベ川',
       // 沙流川水系
       '額平川', 'パンケヌーシ川', 'ペンケヌーシ川', '千呂露川', '二風谷川',
       // 日高地方
@@ -431,7 +667,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
   try {
     const rivers = [
       // 青森県
-      { name: '岩木川', pref: '青森県', region: 'tohoku' }, { name: '馬淵川', pref: '青森県', region: 'tohoku' },
+      { name: '���木川', pref: '青森県', region: 'tohoku' }, { name: '馬淵川', pref: '青森県', region: 'tohoku' },
       { name: '奥入瀬川', pref: '青森県', region: 'tohoku' }, { name: '新井田川', pref: '青森県', region: 'tohoku' },
       // 岩手県
       { name: '北上川', pref: '岩手県', region: 'tohoku' }, { name: '雫石川', pref: '岩手県', region: 'tohoku' },
@@ -440,11 +676,11 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '北上川', pref: '宮城県', region: 'tohoku' }, { name: '名取川', pref: '宮城県', region: 'tohoku' },
       { name: '広瀬川', pref: '宮城県', region: 'tohoku' }, { name: '阿武隈川', pref: '宮城県', region: 'tohoku' },
       // 秋田県
-      { name: '米代川', pref: '秋田県', region: 'tohoku' }, { name: '雄物川', pref: '秋田県', region: 'tohoku' },
-      { name: '子吉川', pref: '秋田県', region: 'tohoku' }, { name: '玉川', pref: '秋田県', region: 'tohoku' },
+      { name: '米���川', pref: '秋田県', region: 'tohoku' }, { name: '雄物川', pref: '秋田県', region: 'tohoku' },
+      { name: '子��川', pref: '秋田県', region: 'tohoku' }, { name: '玉川', pref: '秋田県', region: 'tohoku' },
       // 山形県
       { name: '最上川', pref: '山形県', region: 'tohoku' }, { name: '置賜白川', pref: '山形県', region: 'tohoku' },
-      { name: '丹生川', pref: '山形県', region: 'tohoku' }, { name: '小国川', pref: '山形県', region: 'tohoku' },
+      { name: '丹生川', pref: '山形県', region: 'tohoku' }, { name: '小国���', pref: '山形県', region: 'tohoku' },
       // 福島県
       { name: '阿武隈川', pref: '福島県', region: 'tohoku' }, { name: '阿賀川', pref: '福島県', region: 'tohoku' },
       { name: '只見川', pref: '福島県', region: 'tohoku' }, { name: '夏井川', pref: '福島県', region: 'tohoku' },
@@ -467,12 +703,12 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '多摩川', pref: '東京都', region: 'kanto' }, { name: '荒川', pref: '東京都', region: 'kanto' },
       { name: '隅田川', pref: '東京都', region: 'kanto' }, { name: '神田川', pref: '東京都', region: 'kanto' },
       // 神奈��県
-      { name: '相模川', pref: '神奈川県', region: 'kanto' }, { name: '酒匂川', pref: '神奈川県', region: 'kanto' },
+      { name: '相模��', pref: '神奈川県', region: 'kanto' }, { name: '酒匂川', pref: '神奈川県', region: 'kanto' },
       { name: '鶴見川', pref: '神奈川県', region: 'kanto' }, { name: '多摩川', pref: '神奈川県', region: 'kanto' },
       // 新潟県
       { name: '信濃川', pref: '新潟県', region: 'chubu' }, { name: '阿賀野川', pref: '新潟県', region: 'chubu' },
       { name: '魚野川', pref: '新潟県', region: 'chubu' }, { name: '関川', pref: '新潟県', region: 'chubu' },
-      // 富山県
+      // ���山県
       { name: '神通川', pref: '富山県', region: 'chubu' }, { name: '常願寺川', pref: '富山県', region: 'chubu' },
       { name: '黒部川', pref: '富山県', region: 'chubu' }, { name: '庄川', pref: '富山県', region: 'chubu' },
       // 石川県
@@ -495,7 +731,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '豊川', pref: '愛知県', region: 'chubu' }, { name: '庄内川', pref: '愛知県', region: 'chubu' },
       // 三重県
       { name: '木曽川', pref: '三重県', region: 'kinki' }, { name: '櫛田川', pref: '三重県', region: 'kinki' },
-      { name: '宮川', pref: '三重県', region: 'kinki' }, { name: '雲出川', pref: '三重県', region: 'kinki' },
+      { name: '宮川', pref: '三重県', region: 'kinki' }, { name: '雲出川', pref: '三��県', region: 'kinki' },
       // 滋賀県
       { name: '瀬田川', pref: '滋賀県', region: 'kinki' }, { name: '野洲川', pref: '滋賀県', region: 'kinki' },
       { name: '愛知川', pref: '滋賀県', region: 'kinki' }, { name: '姉川', pref: '滋賀県', region: 'kinki' },
@@ -503,7 +739,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '淀川', pref: '京都府', region: 'kinki' }, { name: '桂川', pref: '京都府', region: 'kinki' },
       { name: '鴨川', pref: '京都府', region: 'kinki' }, { name: '宇治川', pref: '京都府', region: 'kinki' },
       // 大阪府
-      { name: '淀川', pref: '大阪府', region: 'kinki' }, { name: '大和川', pref: '大阪府', region: 'kinki' },
+      { name: '淀川', pref: '大阪��', region: 'kinki' }, { name: '大和川', pref: '大阪府', region: 'kinki' },
       { name: '寝屋川', pref: '大阪府', region: 'kinki' }, { name: '石川', pref: '大阪府', region: 'kinki' },
       // 兵庫県
       { name: '加古川', pref: '兵庫県', region: 'kinki' }, { name: '揖保川', pref: '兵庫県', region: 'kinki' },
@@ -518,7 +754,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '千代川', pref: '鳥取県', region: 'chugoku' }, { name: '天神川', pref: '鳥取県', region: 'chugoku' },
       { name: '日野川', pref: '鳥取県', region: 'chugoku' }, { name: '佐治川', pref: '鳥取県', region: 'chugoku' },
       // 島根県
-      { name: '斐伊川', pref: '島根県', region: 'chugoku' }, { name: '江の川', pref: '島根県', region: 'chugoku' },
+      { name: '斐伊川', pref: '島根県', region: 'chugoku' }, { name: '江の川', pref: '島根���', region: 'chugoku' },
       { name: '高津川', pref: '島根県', region: 'chugoku' }, { name: '神戸川', pref: '島根県', region: 'chugoku' },
       // 岡山県
       { name: '旭川', pref: '岡山県', region: 'chugoku' }, { name: '吉井川', pref: '岡山県', region: 'chugoku' },
@@ -564,7 +800,7 @@ app.post("/make-server-5f24a873/restore-all-prefectures", async (c) => {
       { name: '万之瀬川', pref: '鹿児島県', region: 'kyushu' }, { name: '雄川', pref: '鹿児島県', region: 'kyushu' },
       // 沖縄県
       { name: '比謝川', pref: '沖縄県', region: 'kyushu' }, { name: '国場川', pref: '沖縄県', region: 'kyushu' },
-      { name: '安里川', pref: '沖縄県', region: 'kyushu' }, { name: '与那覇川', pref: '沖縄県', region: 'kyushu' },
+      { name: '安里川', pref: '沖縄県', region: 'kyushu' }, { name: '与那覇川', pref: '��縄県', region: 'kyushu' },
     ];
 
     let successCount = 0;
@@ -640,7 +876,7 @@ app.get("/make-server-5f24a873/camera-proxy", async (c) => {
     const html = await response.text();
     console.log('HTML length:', html.length);
     
-    // HTMLから実際の画像URLを抽出する（簡易的な実装）
+    // HTMLから実際の画像URLを抽出する（簡易的な実装���
     // 実際のURLパターンは検証が必要
     const imageUrlMatch = html.match(/src=["']([^"']*\.jpg[^"']*)["']/i) || 
                           html.match(/src=["']([^"']*\.jpeg[^"']*)["']/i) ||
@@ -777,7 +1013,7 @@ app.get("/make-server-5f24a873/river-api-test", async (c) => {
   }
 });
 
-// 国土交通省の河川カメラ情報API（公式データ利用）
+// 国土交通省の河川カメラ情報API（公式��ータ利用）
 app.get("/make-server-5f24a873/river-cameras", async (c) => {
   try {
     const riverName = c.req.query('riverName');
@@ -809,7 +1045,7 @@ app.get("/make-server-5f24a873/river-cameras", async (c) => {
         },
         {
           id: '0303050101100020',
-          name: '取手観測所',
+          name: '取手観����',
           location: '茨城県取手市',
           imageUrl: 'https://www.river.go.jp/kawabou/ipCamera.do?init=init&obsrvId=0303050101100020',
           lastUpdated: '10分前',
@@ -864,11 +1100,190 @@ app.get("/make-server-5f24a873/river-cameras", async (c) => {
   }
 });
 
-// スクレイピングAPIクライアントをインポート
-import { getRiverCameraInfo } from './river_graphql.tsx';
-import { findStationById } from './river_observation_data.tsx';
+// DPFデータキャッシュ（1時間有効）
+let dpfDataCache: {
+  data: RiverObservationMetadata[] | null;
+  timestamp: number;
+} = {
+  data: null,
+  timestamp: 0
+};
 
-// 新しいAPIエンドポイント: HTMLスクレイピングで観測所情報とカメラURLを取得
+const CACHE_DURATION = 60 * 60 * 1000; // 1時間
+
+/**
+ * DPF GraphQL APIからデータを取得（キャッシュ付き）
+ */
+async function getDPFData(): Promise<RiverObservationMetadata[]> {
+  const now = Date.now();
+  
+  // キャッシュが有効な場合は返す
+  if (dpfDataCache.data && (now - dpfDataCache.timestamp) < CACHE_DURATION) {
+    console.log('Using cached DPF data');
+    return dpfDataCache.data;
+  }
+  
+  console.log('Fetching fresh DPF data...');
+  try {
+    const data = await fetchAllRiverObservations();
+    dpfDataCache.data = data;
+    dpfDataCache.timestamp = now;
+    console.log(`Cached ${data.length} observation stations`);
+    return data;
+  } catch (error) {
+    // 403エラーの場合は静かに失敗させる
+    const errorMessage = String(error);
+    if (errorMessage.includes('DPF_API_ACCESS_DENIED') || errorMessage.includes('403')) {
+      console.warn('DPF API access denied - using fallback data source');
+    } else {
+      console.error('Failed to fetch DPF data:', error);
+    }
+    
+    // キャッシュがあれば古くても返す
+    if (dpfDataCache.data) {
+      console.log('Returning stale cache due to error');
+      return dpfDataCache.data;
+    }
+    throw error;
+  }
+}
+
+// 新しいAPIエンドポイント: DPF GraphQL APIで観測所情報を取得
+app.get("/make-server-5f24a873/river-observations/:riverName", async (c) => {
+  try {
+    const riverName = c.req.param('riverName');
+    
+    console.log('=== River Observations Request (DPF GraphQL) ===');
+    console.log('River Name:', riverName);
+    
+    // DPF GraphQL APIからデータ取得を試みる
+    try {
+      const allObservations = await getDPFData();
+      const observations = filterByRiverName(allObservations, riverName);
+      
+      console.log(`Found ${observations.length} observation stations for ${riverName}`);
+      
+      // カメラ情報を抽出
+      const cameras = observations.map(extractCameraInfo);
+      
+      // 最初の観測所の緯度経度で天気予報を取得
+      let weatherData = [];
+      let currentWeather = null;
+      
+      if (observations.length > 0) {
+        const firstObs = observations[0];
+        if (firstObs.latitude && firstObs.longitude) {
+          try {
+            console.log(`Fetching weather for lat=${firstObs.latitude}, lon=${firstObs.longitude}`);
+            weatherData = await getWeatherForecast(firstObs.latitude, firstObs.longitude);
+            currentWeather = await getCurrentWeather(firstObs.latitude, firstObs.longitude);
+          } catch (error) {
+            console.error('Weather fetch error:', error);
+          }
+        }
+      }
+    
+      return c.json({
+        riverName,
+        hasData: observations.length > 0,
+        observationCount: observations.length,
+        cameraCount: cameras.length,
+        observations: observations.map(obs => ({
+          id: obs.id,
+          title: obs.title,
+          riverName: obs.riverName,
+          observationPlaceName: obs.observationPlaceName,
+          prefecture: obs.prefecture,
+          municipalityName: obs.municipalityName,
+          latitude: obs.latitude,
+          longitude: obs.longitude,
+          lastUpdateDateTime: obs.lastUpdateDateTime,
+          url: obs.url,
+          cameraUrl: obs.cameraUrl,
+          hasCameraUrl: !!obs.cameraUrl || !!obs.url
+        })),
+        cameras: cameras.map(cam => ({
+          id: cam.id,
+          name: cam.name,
+          location: cam.location,
+          lat: cam.lat,
+          lon: cam.lon,
+          imageUrl: cam.imageUrl,
+          detailUrl: cam.detailUrl,
+          cameraUrl: cam.detailUrl,
+          hasCameraUrl: !!cam.imageUrl || !!cam.detailUrl,
+          lastUpdated: cam.lastUpdated || '最新'
+        })),
+        weather: weatherData,
+        currentWeather: currentWeather,
+        source: '��土交通省データプラットフォーム (GraphQL API)',
+        apiEndpoint: 'DPF GraphQL API',
+        totalStations: allObservations.length
+      });
+      
+    } catch (dpfError) {
+      // DPF APIエラーの場合、川名から緯度経度を取得して天気予報を返す
+      const errorMessage = String(dpfError);
+      if (errorMessage.includes('DPF_API_ACCESS_DENIED') || errorMessage.includes('403')) {
+        console.warn('DPF API access denied, using coordinates fallback');
+      } else {
+        console.error('DPF API failed, trying coordinates fallback:', dpfError);
+      }
+      
+      // 川名から緯度経度を取得
+      const coords = getRiverCoordinates(riverName);
+      let weatherData = [];
+      let currentWeather = null;
+      
+      if (coords) {
+        try {
+          console.log(`Using fallback coordinates for ${riverName}: lat=${coords.lat}, lon=${coords.lon}`);
+          weatherData = await getWeatherForecast(coords.lat, coords.lon);
+          currentWeather = await getCurrentWeather(coords.lat, coords.lon);
+          
+          return c.json({
+            riverName,
+            hasData: true,
+            observationCount: 0,
+            cameraCount: 0,
+            observations: [],
+            cameras: [],
+            weather: weatherData,
+            currentWeather: currentWeather,
+            source: '天気予報データ��緯度経度マッピング）',
+            apiEndpoint: 'OpenWeather API (Coordinates Fallback)',
+            note: 'DPF APIが利用できないため、川の代表地点の天気予報を表示しています'
+          });
+        } catch (weatherError) {
+          console.error('Weather API also failed:', weatherError);
+        }
+      }
+      
+      return c.json({
+        riverName,
+        hasData: false,
+        observationCount: 0,
+        cameraCount: 0,
+        observations: [],
+        cameras: [],
+        weather: [],
+        currentWeather: null,
+        source: 'DPF API Error - Check API key configuration',
+        apiEndpoint: 'DPF GraphQL API (Failed)',
+        error: String(dpfError)
+      });
+    }
+  } catch (error) {
+    console.error('Error in river observations endpoint:', error);
+    return c.json({ 
+      error: 'Internal server error while fetching river observations', 
+      details: String(error),
+      riverName: c.req.param('riverName')
+    }, 500);
+  }
+});
+
+// 既存のスクレイピングエンドポイント（フォールバック用に保持）
 app.get("/make-server-5f24a873/river-info/:riverName", async (c) => {
   try {
     const riverName = c.req.param('riverName');
@@ -893,7 +1308,7 @@ app.get("/make-server-5f24a873/river-info/:riverName", async (c) => {
         location: cam.location,
         imageUrl: cam.imageUrl,
         detailUrl: cam.detailUrl,
-        cameraUrl: cam.detailUrl, // フロントエンド互換性のため
+        cameraUrl: cam.detailUrl, // フロントエンド互換��のため
         hasCameraUrl: true,
         lastUpdated: cam.lastUpdated || '最新'
       })),
@@ -941,7 +1356,7 @@ app.get("/make-server-5f24a873/water-level/:stationId", async (c) => {
       const response = await fetch(station.waterLevelUrl);
       const htmlText = await response.text();
       
-      // HTMLから水位データを抽出（簡易的な実装）
+      // HTMLから水位デー���を抽出（簡易的な実装）
       // 実際のHTMLの構造に応じて調整が必要
       const waterLevelMatch = htmlText.match(/水位[：:]\s*([0-9.]+)\s*m/i);
       const waterLevel = waterLevelMatch ? parseFloat(waterLevelMatch[1]) : null;
@@ -976,6 +1391,668 @@ app.get("/make-server-5f24a873/water-level/:stationId", async (c) => {
     return c.json({ 
       error: 'Internal server error', 
       details: String(error) 
+    }, 500);
+  }
+});
+
+// DPF GraphQL API スキーマ確認エンドポイント（デバッグ用）
+app.get("/make-server-5f24a873/test-dpf-schema", async (c) => {
+  try {
+    console.log('=== Testing DPF API Schema ===');
+    
+    const apiKey = Deno.env.get('DPF_API_KEY');
+    if (!apiKey) {
+      return c.json({ success: false, error: 'DPF_API_KEY not configured' }, 500);
+    }
+    
+    console.log(`API Key: ${apiKey.substring(0, 10)}... (length: ${apiKey.length})`);
+    
+    // GraphQL Introspection query
+    const introspectionQuery = `
+      query {
+        __schema {
+          queryType {
+            name
+            fields {
+              name
+              description
+            }
+          }
+        }
+      }
+    `;
+    
+    const testPatterns = [
+      { name: 'X-Dpf-Api-Key', headers: { 'X-Dpf-Api-Key': apiKey } },
+      { name: 'Authorization Bearer', headers: { 'Authorization': `Bearer ${apiKey}` } },
+    ];
+    
+    const results = [];
+    
+    for (const pattern of testPatterns) {
+      console.log(`\nTesting pattern: ${pattern.name}`);
+      
+      try {
+        const response = await fetch('https://www.mlit-data.jp/api/v1/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...pattern.headers,
+          },
+          body: JSON.stringify({ query: introspectionQuery }),
+        });
+        
+        const responseText = await response.text();
+        console.log(`Status: ${response.status}`);
+        console.log(`Response: ${responseText.substring(0, 500)}`);
+        
+        results.push({
+          pattern: pattern.name,
+          status: response.status,
+          statusText: response.statusText,
+          response: responseText.substring(0, 1000),
+          headers: Object.fromEntries(response.headers.entries()),
+        });
+      } catch (error) {
+        results.push({
+          pattern: pattern.name,
+          error: String(error),
+        });
+      }
+    }
+    
+    return c.json({ success: true, results });
+  } catch (error) {
+    console.error('Error testing DPF schema:', error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// DPF GraphQL API 直接テストエンドポイント（デバッグ用）
+app.post("/make-server-5f24a873/test-dpf-direct", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { endpoint, authHeader, query } = body;
+    
+    const apiKey = Deno.env.get('DPF_API_KEY');
+    if (!apiKey) {
+      return c.json({ success: false, error: 'DPF_API_KEY not configured' }, 500);
+    }
+    
+    console.log('=== DPF API Direct Test ===');
+    console.log('Endpoint:', endpoint);
+    console.log('Auth Header:', authHeader);
+    console.log('API Key:', apiKey.substring(0, 10) + '... (length: ' + apiKey.length + ')');
+    console.log('Query:', query);
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // ヘッダー名に基づいて認証情報を追加
+    if (authHeader === 'Authorization') {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    } else {
+      headers[authHeader] = apiKey;
+    }
+    
+    console.log('Request headers:', JSON.stringify(headers, null, 2));
+    
+    const startTime = Date.now();
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query }),
+    });
+    const duration = Date.now() - startTime;
+    
+    const responseText = await response.text();
+    console.log(`Response received in ${duration}ms`);
+    console.log('Status:', response.status);
+    console.log('Status Text:', response.statusText);
+    console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
+    console.log('Response body (first 1000 chars):', responseText.substring(0, 1000));
+    
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch {
+      parsedResponse = responseText;
+    }
+    
+    return c.json({
+      success: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      duration,
+      headers: Object.fromEntries(response.headers.entries()),
+      response: parsedResponse,
+      rawResponse: responseText.substring(0, 2000),
+    });
+  } catch (error) {
+    console.error('Error in direct test:', error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// DPF GraphQL APIから川のリストを生成・保存するエンドポイント
+app.post("/make-server-5f24a873/sync-rivers-from-dpf", async (c) => {
+  const overallStartTime = Date.now();
+  
+  try {
+    console.log('=== Starting DPF River Sync ===');
+    console.log(`Start time: ${new Date().toISOString()}`);
+    console.log('⚠️ Supabase Function timeout limit: 60 seconds');
+    
+    // DPF GraphQL APIから観測所データを取得
+    const fetchStartTime = Date.now();
+    console.log('Step 1: Fetching data from DPF API...');
+    const dpfData = await getDPFData();
+    const fetchDuration = Date.now() - fetchStartTime;
+    const elapsedSoFar = Date.now() - overallStartTime;
+    console.log(`✅ Step 1 completed in ${fetchDuration}ms (elapsed: ${elapsedSoFar}ms / 60000ms)`);
+    console.log(`Fetched ${dpfData.length} observation stations from DPF API`);
+    
+    // 60秒制限チェック
+    if (elapsedSoFar > 50000) {
+      console.warn(`⚠️ WARNING: Already ${elapsedSoFar}ms elapsed. Approaching 60s timeout!`);
+    }
+    
+    if (dpfData.length === 0) {
+      return c.json({ 
+        success: false, 
+        message: 'DPF APIからデータを取得できませんでした',
+        count: 0 
+      });
+    }
+    
+    // 河川名でグループ化
+    const groupStartTime = Date.now();
+    console.log('Step 2: Grouping rivers by name and prefecture...');
+    const riverMap = new Map<string, {
+      name: string;
+      prefecture: string;
+      region: string;
+      observationCount: number;
+      stations: RiverObservationMetadata[];
+    }>();
+    
+    // 都道府県別のカウントをログ出力
+    const prefectureCount = new Map<string, number>();
+    
+    for (const station of dpfData) {
+      const riverName = station.riverName;
+      const prefecture = station.prefecture;
+      
+      // 都道府県ごとのカウント
+      if (prefecture && prefecture !== '不明') {
+        prefectureCount.set(prefecture, (prefectureCount.get(prefecture) || 0) + 1);
+      }
+      
+      if (!riverName || riverName === '不明' || !prefecture) {
+        continue;
+      }
+      
+      // 河川名+都道府県で一意のキーを作成（同じ川が複数の県にまたがる場合を考慮）
+      const key = `${riverName}_${prefecture}`;
+      
+      if (!riverMap.has(key)) {
+        riverMap.set(key, {
+          name: riverName,
+          prefecture: prefecture,
+          region: getPrefectureRegion(prefecture),
+          observationCount: 0,
+          stations: []
+        });
+      }
+      
+      const river = riverMap.get(key)!;
+      river.observationCount++;
+      river.stations.push(station);
+    }
+    
+    // 都道府県別のカウントをログ出力
+    console.log('\n=== Prefecture observation station count ===');
+    const sortedPrefectures = Array.from(prefectureCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20); // 上位20件のみ表示
+    for (const [pref, count] of sortedPrefectures) {
+      console.log(`${pref}: ${count} observation stations`);
+    }
+    console.log('===\n');
+    
+    // 山梨県のデータを詳しく確認
+    console.log('=== Yamanashi Prefecture Detail ===');
+    const yamanashiStations = dpfData.filter(s => s.prefecture === '山梨県');
+    console.log(`山梨県の観測所数: ${yamanashiStations.length}`);
+    const yamanashiRivers = Array.from(riverMap.values())
+      .filter(r => r.prefecture === '山梨県');
+    console.log(`山梨県の川の数: ${yamanashiRivers.length}`);
+    console.log('山梨県の川リスト:');
+    for (const river of yamanashiRivers) {
+      console.log(`  - ${river.name} (観測所: ${river.observationCount})`);
+    }
+    console.log('===\n');
+    
+    const groupDuration = Date.now() - groupStartTime;
+    const elapsedAfterGroup = Date.now() - overallStartTime;
+    console.log(`✅ Step 2 completed in ${groupDuration}ms (elapsed: ${elapsedAfterGroup}ms / 60000ms)`);
+    console.log(`Grouped into ${riverMap.size} unique rivers`);
+    
+    // 60秒制限チェック
+    if (elapsedAfterGroup > 50000) {
+      console.warn(`⚠️ WARNING: Already ${elapsedAfterGroup}ms elapsed. Approaching 60s timeout!`);
+    }
+    
+    // データベースに保存
+    const dbStartTime = Date.now();
+    console.log('Step 3: Saving to database...');
+    let successCount = 0;
+    let riverId = 1;
+    
+    // 既存のデータをクリア（バッチ削除で高速化）
+    console.log('Step 3a: Clearing existing river data...');
+    const clearStartTime = Date.now();
+    const existingRivers = await kv.getByPrefix('river:');
+    if (existingRivers.length > 0) {
+      const keysToDelete = existingRivers.map(r => `river:${r.id}`);
+      await kv.mdel(keysToDelete); // バッチ削除
+    }
+    const clearDuration = Date.now() - clearStartTime;
+    const elapsedAfterClear = Date.now() - overallStartTime;
+    console.log(`Cleared ${existingRivers.length} existing rivers in ${clearDuration}ms (elapsed: ${elapsedAfterClear}ms / 60000ms)`);
+    
+    // 新しいデータを保存（バッチ保存で高速化）
+    console.log('Step 3b: Saving new river data...');
+    const saveStartTime = Date.now();
+    const keys: string[] = [];
+    const values: any[] = [];
+    
+    for (const [key, riverData] of riverMap.entries()) {
+      const riverRecord = {
+        id: riverId.toString(),
+        name: riverData.name,
+        region: riverData.region,
+        prefecture: riverData.prefecture,
+        length: Math.floor(Math.random() * 80) + 20, // 20-100km (仮のデータ)
+        waterLevel: parseFloat((Math.random() * 3 + 1).toFixed(2)), // 1.00-4.00m (仮のデータ)
+        warningLevel: 5.20,
+        currentStatus: 'normal' as const,
+        cameras: [],
+        weather: [],
+        dataSource: 'dpf' as const, // ✅ DPF APIから取得したデータ
+        scale: detectRiverScale(riverData.name), // ✅ 川の規模を自動判定
+        observationCount: riverData.observationCount, // 観測所の数を追加
+        dpfStations: riverData.stations.map(s => ({
+          id: s.id,
+          name: s.observationPlaceName,
+          lat: s.latitude,
+          lon: s.longitude
+        }))
+      };
+      
+      keys.push(`river:${riverId}`);
+      values.push(riverRecord);
+      successCount++;
+      riverId++;
+    }
+    
+    // バッチ保存実行
+    console.log(`Batch saving ${keys.length} rivers...`);
+    await kv.mset(keys, values);
+    
+    const saveDuration = Date.now() - saveStartTime;
+    const dbDuration = Date.now() - dbStartTime;
+    const elapsedAfterDB = Date.now() - overallStartTime;
+    console.log(`✅ Step 3 completed in ${dbDuration}ms (clear: ${clearDuration}ms, save: ${saveDuration}ms)`);
+    console.log(`Elapsed time after DB: ${elapsedAfterDB}ms / 60000ms`);
+    
+    const overallDuration = Date.now() - overallStartTime;
+    console.log(`\n=== DPF River Sync Complete ===`);
+    console.log(`Successfully synced ${successCount} rivers from DPF API`);
+    console.log(`⏱️ Total execution time: ${overallDuration}ms`);
+    console.log(`  - Fetch DPF data: ${fetchDuration}ms (${((fetchDuration / overallDuration) * 100).toFixed(1)}%)`);
+    console.log(`  - Group by river: ${groupDuration}ms (${((groupDuration / overallDuration) * 100).toFixed(1)}%)`);
+    console.log(`  - Database operations: ${dbDuration}ms (${((dbDuration / overallDuration) * 100).toFixed(1)}%)`);
+    console.log(`End time: ${new Date().toISOString()}`);
+    
+    return c.json({ 
+      success: true, 
+      message: `DPF APIから${successCount}件の��を同期しました`,
+      count: successCount,
+      observationStations: dpfData.length,
+      timing: {
+        total: overallDuration,
+        fetch: fetchDuration,
+        group: groupDuration,
+        database: dbDuration,
+      }
+    });
+    
+  } catch (error) {
+    const overallDuration = Date.now() - overallStartTime;
+    
+    // 詳細なエラーログを出力
+    const errorMessage = String(error);
+    console.error('=== DPF API Sync Error Details ===');
+    console.error(`Failed after ${overallDuration}ms`);
+    console.error('Error message:', errorMessage);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    if (errorMessage.includes('DPF_API_ACCESS_DENIED') || errorMessage.includes('403')) {
+      console.warn('⚠️ DPF API sync failed: Access denied (403)');
+    } else {
+      console.error('Error syncing rivers from DPF:', error);
+    }
+    
+    // エラーの詳細を判定
+    let userMessage = 'DPF APIからデータを取得できませんでした';
+    let errorCode = 'UNKNOWN_ERROR';
+    let suggestions: string[] = [];
+    
+    if (errorMessage.includes('DPF_API_ACCESS_DENIED') || errorMessage.includes('403')) {
+      userMessage = 'DPF APIへのアクセスが拒否されました（403 Forbidden）';
+      errorCode = 'DPF_API_ACCESS_DENIED';
+      suggestions = [
+        '国土交通省データプラットフォーム（DPF）のAPIキーが無効または期限切れの可能性があります',
+        'APIキーに観測所データ（hwq/hwq_stage）へのアクセス権限が付与されていない可能性があります',
+        '代わりに「データベースを復元」ボタンをクリックして、事前に登録された約350件の川データを使用してください'
+      ];
+    } else if (errorMessage.includes('DPF_API_KEY is not set')) {
+      userMessage = 'DPF APIキーが設定されていません。';
+      errorCode = 'API_KEY_MISSING';
+      suggestions = [
+        '環境変数 DPF_API_KEY が設定されていません',
+        '管理画面でAPIキーを設定してください'
+      ];
+    } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch')) {
+      userMessage = 'ネットワークエラーまたはDPF APIへの接続に失敗しまし���。';
+      errorCode = 'NETWORK_ERROR';
+      suggestions = [
+        'DPF APIエンドポイント (https://www.mlit-data.jp/api/v1/graphql) への接続に失敗しました',
+        'インターネット接続を確認してください',
+        'DPF APIサービスが正常に稼働しているか確認してください',
+        'ファイアウォールやプロキシ設定を確認してください'
+      ];
+    }
+    
+    return c.json({ 
+      success: false,
+      error: userMessage, 
+      errorCode: errorCode,
+      suggestions: suggestions,
+      details: String(error),
+      rawError: errorMessage
+    }, 500);
+  }
+});
+
+// 手動で川を追加するエンドポイント
+app.post("/make-server-5f24a873/add-manual-river", addManualRiver);
+
+// CSVから複数の川を一括登録するエンドポイント
+app.post("/make-server-5f24a873/add-rivers-bulk", addRiversBulk);
+
+// CSVファイルから複数の川を一括登録するエンドポイント（新）
+app.post("/make-server-5f24a873/rivers/bulk-upload", async (c) => {
+  try {
+    console.log('=== CSV Bulk Upload Started ===');
+    
+    // FormDataを取得
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    
+    if (!file || !(file instanceof File)) {
+      return c.json({
+        success: false,
+        error: 'CSVファイルが見つかりません'
+      }, 400);
+    }
+    
+    console.log('File received:', file.name, file.size, 'bytes');
+    
+    // CSVファイルを読み込む
+    const text = await file.text();
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    console.log('Total lines:', lines.length);
+    
+    if (lines.length === 0) {
+      return c.json({
+        success: false,
+        error: 'CSVファイルが空です'
+      }, 400);
+    }
+    
+    // 既存の川の数を取得してIDを決定
+    // 毎回既存の川をスキャンして正確なmaxIdを取得（重複防止のため）
+    console.log('🔍 Fetching existing rivers to determine max ID...');
+    const existingRivers = await kv.getByPrefix('river:');
+    let maxId = existingRivers.reduce((max, river) => {
+      const id = parseInt(river.id);
+      return id > max ? id : max;
+    }, 0);
+    console.log(`📌 Current max ID: ${maxId}, existing rivers: ${existingRivers.length}`);
+    
+    const results = {
+      success: 0,
+      failed: 0,
+      skipped: 0,
+      total: lines.length
+    };
+    
+    const errors: any[] = [];
+    
+    // 各行を処理
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) {
+        results.skipped++;
+        continue;
+      }
+      
+      try {
+        const cols = line.split(',').map(col => col.trim());
+        
+        // CSVフォーマット: 川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模
+        const name = cols[0];
+        const prefecture = cols[1];
+        const municipality = cols[2] || '';
+        const basinName = cols[3] || '';
+        const stationName = cols[4] || '';
+        const latitude = cols[5];
+        const longitude = cols[6];
+        const scale = cols[7];
+        
+        // 必須フィールドのチェック
+        if (!name || !prefecture || !latitude || !longitude) {
+          results.failed++;
+          errors.push({
+            line: i + 1,
+            error: `必須フィールドが不足しています（川の名前: ${name}, 都道府県: ${prefecture}, 緯度: ${latitude}, 経度: ${longitude}）`
+          });
+          continue;
+        }
+        
+        // 緯度経度の数値チェックと自動丸め処理（小数点以下6桁）
+        const lat = parseFloat(latitude);
+        const lon = parseFloat(longitude);
+        
+        if (isNaN(lat) || isNaN(lon)) {
+          results.failed++;
+          errors.push({
+            line: i + 1,
+            error: `緯度または経度が数値ではありません（緯度: ${latitude}, 経度: ${longitude}）`
+          });
+          continue;
+        }
+        
+        // 小数点以下6桁に丸める（約10cm精度）
+        const roundedLat = Math.round(lat * 1000000) / 1000000;
+        const roundedLon = Math.round(lon * 1000000) / 1000000;
+        
+        // 規模のチェック（空欄の場合は自動検出）
+        const validScales = ['large', 'medium', 'small'];
+        const riverScale = (scale && validScales.includes(scale.toLowerCase())) 
+          ? scale.toLowerCase() 
+          : detectRiverScale(name);
+        
+        maxId++;
+        const riverRegion = getPrefectureRegion(prefecture);
+        
+        const riverRecord = {
+          id: maxId.toString(),
+          name: name,
+          region: riverRegion,
+          prefecture: prefecture,
+          municipality: municipality,
+          basinName: basinName,
+          stationName: stationName,
+          latitude: roundedLat,
+          longitude: roundedLon,
+          length: 0,
+          waterLevel: 0,
+          warningLevel: 0,
+          currentStatus: 'normal' as const,
+          cameras: [],
+          weather: [],
+          dataSource: 'manual' as const,
+          scale: riverScale,
+          observationCount: 0,
+          dpfStations: []
+        };
+        
+        await kv.set(`river:${maxId}`, riverRecord);
+        results.success++;
+        
+        console.log(`✅ Line ${i + 1}: Added ${name} (${prefecture})`);
+        
+      } catch (error) {
+        results.failed++;
+        errors.push({
+          line: i + 1,
+          error: String(error)
+        });
+        console.error(`❌ Line ${i + 1}: Error -`, error);
+      }
+    }
+    
+    console.log('=== CSV Bulk Upload Complete ===');
+    console.log('Results:', results);
+    console.log(`📌 Final max ID: ${maxId}`);
+    
+    return c.json({
+      success: true,
+      message: `${results.success}件の川を登録しました`,
+      stats: results,
+      errors: errors
+    });
+    
+  } catch (error) {
+    console.error('CSV Bulk Upload Error:', error);
+    return c.json({
+      success: false,
+      error: 'CSV一括登録に失敗しました',
+      details: String(error)
+    }, 500);
+  }
+});
+
+// 川に降水量ベースの推定を追加するエンドポイント
+app.get("/make-server-5f24a873/river/:id/rainfall-status", getRiverRainfallStatus);
+
+// 登録されている川の統計情報を取得するエンドポイント
+app.get("/make-server-5f24a873/rivers/stats", async (c) => {
+  try {
+    console.log('=== Fetching River Statistics ===');
+    const allRivers = await kv.getByPrefix('river:');
+    
+    // 都道府県別の件数を集計
+    const prefectureStats: Record<string, number> = {};
+    allRivers.forEach(river => {
+      const pref = river.prefecture || '不明';
+      prefectureStats[pref] = (prefectureStats[pref] || 0) + 1;
+    });
+    
+    // 地域別の件数を集計
+    const regionStats: Record<string, number> = {};
+    allRivers.forEach(river => {
+      const region = river.region || '不明';
+      regionStats[region] = (regionStats[region] || 0) + 1;
+    });
+    
+    return c.json({
+      success: true,
+      total: allRivers.length,
+      byPrefecture: prefectureStats,
+      byRegion: regionStats
+    });
+  } catch (error) {
+    console.error('Stats Error:', error);
+    return c.json({
+      success: false,
+      error: '統計情報の取得に失敗しました',
+      details: String(error)
+    }, 500);
+  }
+});
+
+// データバックアップエンドポイント（CSV形式でエクスポート）
+app.get("/make-server-5f24a873/rivers/backup", async (c) => {
+  try {
+    console.log('=== Backing up Rivers Data ===');
+    const allRivers = await kv.getByPrefix('river:');
+    
+    // CSVヘッダー
+    let csv = '川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模\n';
+    
+    // データを追加
+    allRivers.forEach(river => {
+      csv += `${river.name},${river.prefecture},${river.city},${river.waterSystem || ''},${river.observatory || ''},${river.latitude},${river.longitude},${river.scale}\n`;
+    });
+    
+    console.log(`✅ Backed up ${allRivers.length} rivers`);
+    
+    // CSV形式で返す
+    return new Response(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="rivers_backup_${new Date().toISOString().split('T')[0]}.csv"`
+      }
+    });
+  } catch (error) {
+    console.error('Backup Rivers Error:', error);
+    return c.json({
+      success: false,
+      error: 'バックアップに失敗しました',
+      details: String(error)
+    }, 500);
+  }
+});
+
+// 全ての川データを削除するエンドポイント（CSV再登録前のクリーンアップ用）
+app.delete("/make-server-5f24a873/rivers/clear-all", async (c) => {
+  try {
+    console.log('=== Clearing All Rivers ===');
+    const allRivers = await kv.getByPrefix('river:');
+    
+    // 全ての川データを削除
+    const deletePromises = allRivers.map(river => kv.del(`river:${river.id}`));
+    await Promise.all(deletePromises);
+    
+    console.log(`✅ Deleted ${allRivers.length} rivers`);
+    
+    return c.json({
+      success: true,
+      message: `${allRivers.length}件の川データを削除しました`,
+      deletedCount: allRivers.length
+    });
+  } catch (error) {
+    console.error('Clear All Rivers Error:', error);
+    return c.json({
+      success: false,
+      error: '川データの削除に失敗しました',
+      details: String(error)
     }, 500);
   }
 });

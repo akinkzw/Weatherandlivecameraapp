@@ -3,6 +3,12 @@ import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
+import { WeatherTest } from './components/WeatherTest';
+import { DpfSyncAdmin } from './components/DpfSyncAdmin';
+import { DpfDataCheck } from './components/DpfDataCheck';
+import { DpfApiDebugger } from './components/DpfApiDebugger';
+import { ManualRiverAdmin } from './components/ManualRiverAdmin';
+import { BulkRiverUpload } from './components/BulkRiverUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
@@ -22,6 +28,11 @@ export interface River {
   currentStatus: 'normal' | 'caution' | 'warning';
   cameras: Camera[];
   weather: WeatherData[];
+  dataSource?: 'dpf' | 'manual'; // ✅ データソース
+  scale?: 'large' | 'medium' | 'small'; // ✅ 川の規模
+  municipality?: string; // ✅ 市区町村
+  latitude?: number; // ✅ 緯度
+  longitude?: number; // ✅ 経度
 }
 
 export interface Camera {
@@ -68,9 +79,10 @@ function App() {
   const [selectedArea, setSelectedArea] = useState<string>('all');
   const [selectedPrefecture, setSelectedPrefecture] = useState<string>('all');
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
-  const [rivers, setRivers] = useState<River[]>([]);
+  const [rivers, setRivers] = useState<River[]>([])
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showAdminPage, setShowAdminPage] = useState(false);
   
   // 都道府県セクションへの参照
   const prefecturesSectionRef = useRef<HTMLDivElement>(null);
@@ -79,18 +91,22 @@ function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const testMode = urlParams.get('test');
 
-  // テストモードの場合はテストコンポーネントを表示
-  if (testMode === 'camera') {
-    return <CameraTest />;
-  }
+  // デバッグ用：コンソールに出力
+  console.log('Current URL:', window.location.href);
+  console.log('URL search params:', window.location.search);
+  console.log('Test mode:', testMode);
+  console.log('testMode === "bulk-upload":', testMode === 'bulk-upload');
   
-  // API テストモードの場合
-  if (testMode === 'api') {
-    return <RiverApiTest />;
+  // 画面に表示してデバッグ
+  if (window.location.search.includes('test=')) {
+    console.log('⚠️ TEST MODE DETECTED IN URL');
   }
 
   // 川のデータを取得
   useEffect(() => {
+    // テストモードや管理ページの場合はデータ取得をスキップ
+    if (testMode || showAdminPage) return;
+
     const fetchRivers = async () => {
       try {
         setIsLoadingRivers(true);
@@ -105,7 +121,7 @@ function App() {
           console.log('川データ取得成功:', data);
           setRivers(data.rivers || []);
         } else {
-          console.error('川データの取失敗しました:', response.status);
+          console.error('川データの取得に失敗しました:', response.status);
         }
       } catch (error) {
         console.error('川データの取得エラー:', error);
@@ -115,7 +131,7 @@ function App() {
     };
 
     fetchRivers();
-  }, []);
+  }, [testMode, showAdminPage]);
 
   // microCMSからバナーデータを取得
   useEffect(() => {
@@ -210,6 +226,41 @@ function App() {
   const isMobile = () => {
     return window.innerWidth <= 768;
   };
+
+  // 管理ページを表示
+  if (showAdminPage) {
+    return <DpfDataCheck />;
+  }
+
+  // テストモードの場合はテストコンポーネントを表示
+  if (testMode === 'camera') {
+    return <CameraTest />;
+  }
+  
+  // API テストモードの場合
+  if (testMode === 'api') {
+    return <RiverApiTest />;
+  }
+  
+  // 天気予報テストモードの場合
+  if (testMode === 'weather') {
+    return <WeatherTest />;
+  }
+  
+  // DPF同期管理画面
+  if (testMode === 'dpf-sync') {
+    return <DpfSyncAdmin />;
+  }
+  
+  // 手動で川を追加する管理画面
+  if (testMode === 'manual-river') {
+    return <ManualRiverAdmin />;
+  }
+  
+  // CSV一括登録画面
+  if (testMode === 'bulk-upload') {
+    return <BulkRiverUpload />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -496,6 +547,16 @@ function App() {
           <ArrowUp className="w-6 h-6" />
         </Button>
       )}
+
+      {/* Admin Access Button */}
+      <Button
+        variant="outline"
+        className="fixed bottom-6 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
+        style={{ borderColor: '#0372ac', color: '#0372ac' }}
+        onClick={() => setShowAdminPage(true)}
+      >
+        管理画面
+      </Button>
     </div>
   );
 }

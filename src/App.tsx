@@ -9,6 +9,10 @@ import { DpfDataCheck } from './components/DpfDataCheck';
 import { DpfApiDebugger } from './components/DpfApiDebugger';
 import { ManualRiverAdmin } from './components/ManualRiverAdmin';
 import { BulkRiverUpload } from './components/BulkRiverUpload';
+import { DpfSearchTest } from './components/DpfSearchTest';
+import { DummyValueCleaner } from './components/DummyValueCleaner';
+import { SimpleDpfIdTest } from './components/SimpleDpfIdTest';
+import { ServerHealthCheck } from './components/ServerHealthCheck';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
@@ -33,6 +37,10 @@ export interface River {
   municipality?: string; // ✅ 市区町村
   latitude?: number; // ✅ 緯度
   longitude?: number; // ✅ 経度
+  dpfObservationId?: string; // ✅ DPF観測所ID（町コード）
+  waterLevelUrl?: string; // ✅ 水位情報URL
+  riverSystem?: string; // ✅ 水系名称
+  observatoryName?: string; // ✅ 観測所名称
 }
 
 export interface Camera {
@@ -102,6 +110,29 @@ function App() {
     console.log('⚠️ TEST MODE DETECTED IN URL');
   }
 
+  // グローバル関数として環境変数チェック機能を追加（デバッグ用）
+  useEffect(() => {
+    (window as any).checkEnv = async () => {
+      try {
+        console.log('=== 環境変数チェック開始 ===');
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/env-check`, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        });
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('環境変数チェック結果:', data);
+        console.table(data.variables);
+        return data;
+      } catch (error) {
+        console.error('環境変数チェックエラー:', error);
+        return { error: String(error) };
+      }
+    };
+    console.log('💡 デバッグ用: コンソールで checkEnv() を実行して環境変数を確認できます');
+  }, []);
+
   // 川のデータを取得
   useEffect(() => {
     // テストモードや管理ページの場合はデータ取得をスキップ
@@ -119,7 +150,35 @@ function App() {
         if (response.ok) {
           const data = await response.json();
           console.log('川データ取得成功:', data);
-          setRivers(data.rivers || []);
+          console.log('取得した川の総数:', data.rivers?.length || 0);
+          
+          // 重複排除処理（川名 + 都道府県でユニーク化）
+          const uniqueRivers = new Map<string, River>();
+          
+          (data.rivers || []).forEach((river: River) => {
+            // ユニークキー = 川名 + 都道府県
+            const uniqueKey = `${river.name}|${river.prefecture}`;
+            
+            // すでに同じキーが存在する場合は、IDが小さい方（古いデータ）を優先
+            if (!uniqueRivers.has(uniqueKey)) {
+              uniqueRivers.set(uniqueKey, river);
+            } else {
+              const existingRiver = uniqueRivers.get(uniqueKey)!;
+              const existingId = parseInt(existingRiver.id);
+              const newId = parseInt(river.id);
+              
+              // IDが小さい方を優先（最初に登録されたデータを優先）
+              if (newId < existingId) {
+                uniqueRivers.set(uniqueKey, river);
+              }
+            }
+          });
+          
+          const uniqueRiversArray = Array.from(uniqueRivers.values());
+          console.log('重複排除後の川の数:', uniqueRiversArray.length);
+          console.log('削除された��複データ:', (data.rivers?.length || 0) - uniqueRiversArray.length, '件');
+          
+          setRivers(uniqueRiversArray);
         } else {
           console.error('川データの取得に失敗しました:', response.status);
         }
@@ -149,7 +208,19 @@ function App() {
           console.log('完全なバナーデータ:', JSON.stringify(data, null, 2));
           setBannerData(data);
         } else {
+          const errorData = await response.json().catch(() => ({}));
           console.error('バナーデータの取得に失敗しました:', response.status, response.statusText);
+          console.error('エラー詳細:', errorData);
+          
+          // 診断情報を表示
+          if (errorData.diagnostics) {
+            console.error('🔍 診断情報:');
+            console.error('  - リクエストURL:', errorData.diagnostics.url);
+            console.error('  - APIキー（プレビュー）:', errorData.diagnostics.apiKeyPreview);
+            console.error('  - 環境変数を使用:', errorData.diagnostics.usedEnvVar);
+            console.error('  - ハードコードされたキーを使用:', errorData.diagnostics.usedHardcoded);
+            console.error('  - メッセージ:', errorData.diagnostics.message);
+          }
         }
       } catch (error) {
         console.error('バナーデータの取得エラー:', error);
@@ -168,7 +239,7 @@ function App() {
     'kansai': ['滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
     'chugoku': ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
     'shikoku': ['徳島県', '香川県', '愛媛県', '高知県'],
-    'kyushu-okinawa': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+    'kyushu-okinawa': ['福���県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
   };
 
   const handleAreaClick = (area: string) => {
@@ -260,6 +331,68 @@ function App() {
   // CSV一括登録画面
   if (testMode === 'bulk-upload') {
     return <BulkRiverUpload />;
+  }
+  
+  // DPF検索テスト画面
+  if (testMode === 'dpf-search') {
+    return <DpfSearchTest />;
+  }
+  
+  // DPF ID テスト画面
+  if (testMode === 'dpf-id-test') {
+    return <SimpleDpfIdTest />;
+  }
+  
+  // サーバー診断画面
+  if (testMode === 'server-health') {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="mb-2" style={{ color: '#0372ac' }}>
+              サーバー診断
+            </h1>
+            <p className="text-slate-600">
+              サーバーの稼働状況とAPI接続を確認します
+            </p>
+          </div>
+          <ServerHealthCheck />
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/'}
+            className="w-full"
+          >
+            メインページに戻る
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // ダミー値クリア画面
+  if (testMode === 'dummy-cleaner') {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2" style={{ color: '#0372ac' }}>
+              データ管理
+            </h1>
+            <p className="text-slate-600">
+              既存の川データのダミー値をクリアします
+            </p>
+          </div>
+          <DummyValueCleaner />
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/'}
+            className="w-full"
+          >
+            メインページに戻る
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -548,14 +681,29 @@ function App() {
         </Button>
       )}
 
-      {/* Admin Access Button */}
+      {/* Admin Access Button - 開発環境のみ表示 */}
+      {(window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.includes('preview') ||
+        window.location.search.includes('admin=true')) && (
+        <Button
+          variant="outline"
+          className="fixed bottom-6 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
+          style={{ borderColor: '#0372ac', color: '#0372ac' }}
+          onClick={() => setShowAdminPage(true)}
+        >
+          管理画面
+        </Button>
+      )}
+      
+      {/* Server Health Check Button - 常に表示（一時的） */}
       <Button
         variant="outline"
-        className="fixed bottom-6 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
-        style={{ borderColor: '#0372ac', color: '#0372ac' }}
-        onClick={() => setShowAdminPage(true)}
+        className="fixed bottom-24 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
+        style={{ borderColor: '#22c55e', color: '#22c55e' }}
+        onClick={() => window.location.href = '/?test=server-health'}
       >
-        管理画面
+        🔍 サーバー診断
       </Button>
     </div>
   );

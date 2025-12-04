@@ -83,7 +83,13 @@ export async function getWeatherForecast(
       return getMockWeatherData();
     }
     
-    const data: OpenWeatherResponse = await response.json();
+    let data: OpenWeatherResponse;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse OpenWeather API response:', jsonError);
+      return getMockWeatherData();
+    }
     
     // 1日1つのデータに集約（正午のデータを使用）
     const dailyForecasts: WeatherData[] = [];
@@ -182,7 +188,13 @@ export async function getCurrentWeather(
       return null;
     }
     
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse current weather response:', jsonError);
+      return null;
+    }
     const weatherInfo = mapWeatherIcon(data.weather[0].icon);
     
     return {

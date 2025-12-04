@@ -1,0 +1,5 @@
+川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL
+笛吹川,山梨県,笛吹市,富士川,石和,35.648,138.640,medium,1901204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283719010&timeType=60
+手取川,石川県,白山市,手取川,鶴来,36.537,136.570,medium,1701204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283618010&timeType=60
+神通川,富山県,富山市,神通川,神通大橋,36.689,137.200,large,1601204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283517010&timeType=60
+信濃川,新潟県,長岡市,信濃川,小千谷,37.312,138.796,large,1501204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283416010&timeType=60

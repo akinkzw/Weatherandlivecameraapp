@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Database, Info, CheckCircle, AlertCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { DummyValueCleaner } from './DummyValueCleaner';
 
 export function DpfDataCheck() {
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
@@ -330,7 +331,7 @@ export function DpfDataCheck() {
               データベース状態確認
             </CardTitle>
             <CardDescription>
-              現在のデータベースとDPF APIのデータ状況を確認します
+              在のデータベースとDPF APIのデータ状況を確認します
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -852,7 +853,7 @@ export function DpfDataCheck() {
               <h3 className="font-semibold text-slate-900 mb-2">このページについて</h3>
               <div className="space-y-2 text-sm text-slate-700">
                 <p>
-                  <strong>データ���ースを復元：</strong> 全国45都道府県の川データ（約350件）を復元します。
+                  <strong>データベスを復元：</strong> 全国45都道府県の川データ（約350件）を復元します。
                   渓流釣りで有名な川を中心に、各都道府県の主要河川を登録します。
                 </p>
                 <p>
@@ -887,9 +888,10 @@ export function DpfDataCheck() {
                   });
                   const data = await res.json();
                   console.log('=== 川の統計情報 ===');
-                  console.log('合計:', data.total);
-                  console.log('都道府県別:', data.byPrefecture);
-                  alert(`合計: ${data.total}件\n\n都道府県別トップ10:\n${Object.entries(data.byPrefecture).sort((a: any, b: any) => b[1] - a[1]).slice(0, 10).map((e: any) => `${e[0]}: ${e[1]}件`).join('\n')}\n\n山梨県: ${data.byPrefecture['山梨県'] || 0}件`);
+                  console.log('合計:', data.totalRivers);
+                  console.log('都道府県別:', data.prefectureStats);
+                  const prefStats = data.prefectureStats || {};
+                  alert(`合計: ${data.totalRivers || 0}件\n\n都道府県別トップ10:\n${Object.entries(prefStats).sort((a: any, b: any) => b[1] - a[1]).slice(0, 10).map((e: any) => `${e[0]}: ${e[1]}件`).join('\n')}\n\n山梨県: ${prefStats['山梨県'] || 0}件`);
                 }}
                 className="flex-1"
                 style={{ borderColor: '#0372ac', color: '#0372ac' }}
@@ -911,6 +913,53 @@ export function DpfDataCheck() {
                 style={{ backgroundColor: '#0372ac' }}
               >
                 📊 CSV一括登録
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    console.log('🔍 環境変数チェック開始...');
+                    const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/env-check`, {
+                      headers: {
+                        'Authorization': `Bearer ${publicAnonKey}`,
+                      },
+                    });
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
+                    
+                    const text = await response.text();
+                    console.log('Response text:', text);
+                    
+                    let data;
+                    try {
+                      data = JSON.parse(text);
+                    } catch (parseError) {
+                      console.error('JSON parse error:', parseError);
+                      alert(`❌ レスポンスのパースに失敗しました\n\nStatus: ${response.status}\nText: ${text.substring(0, 200)}`);
+                      return;
+                    }
+                    
+                    console.log('環境変数チェック結果:', data);
+                    
+                    if (!data.variables) {
+                      alert(`❌ レスポンス形式が不正です\n\n${JSON.stringify(data, null, 2)}`);
+                      return;
+                    }
+                    
+                    const status = Object.entries(data.variables)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join('\n');
+                    
+                    alert(`🔍 環境変数チェック結果\n\n${status}\n\n詳細はコンソールを確認してください（F12キー）`);
+                  } catch (error) {
+                    console.error('環境変数チェックエラー:', error);
+                    alert(`❌ 環境変数チェックに失敗しました\n\nエラー: ${error}\n\nコンソール（F12キー）で詳細を確認してください`);
+                  }
+                }}
+                className="flex-1"
+                style={{ borderColor: '#0372ac', color: '#0372ac' }}
+              >
+                🔍 環境変数確認
               </Button>
             </div>
           </CardContent>

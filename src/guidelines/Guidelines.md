@@ -1,61 +1,41 @@
-**Add your own guidelines here**
-<!--
+以下のガイドラインに従って、このフレームを実装してください
 
-System Guidelines
+# 🚀 DPFアプリ 統合実装ガイドライン（最終版）
 
-Use this file to provide the AI with rules and guidelines you want it to follow.
-This template outlines a few examples of things you can add. You can add your own sections and format it to suit your needs
+## I. 開発の根本方針と技術スタック
 
-TIP: More context isn't always better. It can confuse the LLM. Try and add the most important rules you need
+| 項目                   | 指示内容                                                                                                                                                                                                                 |
+| :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **水位表示の最終目標** | **Webスクレイピングのリスクを避け**、「川の防災情報」サイトが使用している裏側の **JSON/XML APIエンドポイントを特定**し、そのエンドポイントから取得した**リアルタイム水位観測値**（数値）をモーダル内に直接表示すること。 |
+| **フレームワーク**     | **TypeScript** と **Tailwind CSS** を使用し、シンプルで構造化されたアクセシブルなHTML（DOM操作）で実装すること。（Reactなどの大型フレームワークは不使用）                                                                |
+| **認証ヘッダー制約**   | DPF APIへの接続時は、必ず **`apikey`** ヘッダーを使用すること。                                                                                                                                                          |
 
-# General guidelines
+---
 
-Any general rules you want the AI to follow.
-For example:
+## II. データとロジック要件（サーバーサイド）
 
-* Only use absolute positioning when necessary. Opt for responsive and well structured layouts that use flexbox and grid by default
-* Refactor code as you go to keep code clean
-* Keep file sizes small and put helper functions and components in their own files.
+### A. DPF APIの役割（諸元情報）
 
---------------
+- **目的:** 観測所IDとURLを取得する。
+- **GraphQLクエリ:** **`id`** フィールドを取得できる、`hwq_stage` データセット向けのクエリを使用すること。
 
-# Design system guidelines
-Rules for how the AI should make generations look like your company's design system
+### B. リアルタイム水位ロジックの役割（観測値）
 
-Additionally, if you select a design system to use in the prompt box, you can reference
-your design system's components, tokens, variables and components.
-For example:
+- **特定:** 「川の防災情報」サイトの**ネットワーク通信を調査**し、リアルタイム水位データをJSON/XMLで返す**APIエンドポイント**を特定すること。
+- **処理:** DPF APIから取得した**観測所ID**をパラメータとして、特定した**リアルタイム水位API**を呼び出し、返却されたJSONデータから**現在の水位**と**警戒水位**を抽出すること。
+- **配置:** DPF連携ロジックとリアルタイム水位取得ロジックは、**Supabase Functions**内に明確に分離して配置すること。
 
-* Use a base font-size of 14px
-* Date formats should always be in the format “Jun 10”
-* The bottom toolbar should only ever have a maximum of 4 items
-* Never use the floating action button with the bottom toolbar
-* Chips should always come in sets of 3 or more
-* Don't use a dropdown if there are 2 or fewer options
+### C. データスキーマの拡張
 
-You can also create sub sections and add more specific details
-For example:
+- CSVパースロジックとデータベーススキーマを修正し、以下の2列を**TypeScriptの型定義**とKVストアに反映させること。
+  1.  **`DPF観測所ID`** (観測所の一意のID)
+  2.  **`水位情報URL`** (外部サイトへのURL。デバッグおよびバックアップ誘導用)
 
+---
 
-## Button
-The Button component is a fundamental interactive element in our design system, designed to trigger actions or navigate
-users through the application. It provides visual feedback and clear affordances to enhance user experience.
+## III. コンポーネントと実装アプローチ
 
-### Usage
-Buttons should be used for important actions that users need to take, such as form submissions, confirming choices,
-or initiating processes. They communicate interactivity and should have clear, action-oriented labels.
-
-### Variants
-* Primary Button
-  * Purpose : Used for the main action in a section or page
-  * Visual Style : Bold, filled with the primary brand color
-  * Usage : One primary button per section to guide users toward the most important action
-* Secondary Button
-  * Purpose : Used for alternative or supporting actions
-  * Visual Style : Outlined with the primary color, transparent background
-  * Usage : Can appear alongside a primary button for less important actions
-* Tertiary Button
-  * Purpose : Used for the least important actions
-  * Visual Style : Text-only with no border, using primary color
-  * Usage : For actions that should be available but not emphasized
--->
+- **モーダルロジックの修正:** 川の詳細モーダル（`RiverDetail`）は、水位のGraphQLクエリを削除し、**サーバーから取得したリアルタイム水位データ**を表示するように修正すること。
+- **トークン/スタイリング:** Figmaファイル内のバリアブルと **Tailwind CSS** のユーティリティクラスを正確に使用すること。
+- **アクセシビリティ:** **WCAG 2.1 AA基準**に準拠すること。特にモーダルコンポーネントは、抽出データ表示の可読性を含め、アクセシビリティを確保すること。
+- **プロジェクト構成:** **論理的な分離**を優先し、ディレクトリとファイルを適切に作成すること。

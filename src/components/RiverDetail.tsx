@@ -55,6 +55,74 @@ export function RiverDetail({ river }: RiverDetailProps) {
   const [dataSource, setDataSource] = useState<string>('');
   const [apiWeather, setApiWeather] = useState<any[]>([]);
   const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [realtimeWaterLevel, setRealtimeWaterLevel] = useState<any>(null);
+  const [loadingWaterLevel, setLoadingWaterLevel] = useState(false);
+
+  // リアルタイム水位データを取得
+  useEffect(() => {
+    const fetchWaterLevel = async () => {
+      // DPF観測所IDが設定されている場合のみ取得
+      if (!river.dpfObservationId) {
+        console.log('DPF観測所IDが設定されていません');
+        return;
+      }
+
+      setLoadingWaterLevel(true);
+      try {
+        const url = `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/realtime-water-level/${river.dpfObservationId}${
+          river.observatoryName ? `?observatory=${encodeURIComponent(river.observatoryName)}` : ''
+        }`;
+        
+        console.log('Fetching realtime water level:', url);
+        
+        // タイムアウト付きfetch（10秒に設定）
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒タイムアウト
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          try {
+            const data = await response.json();
+            console.log('Realtime water level response:', data);
+            
+            if (data.success && data.data && data.data.length > 0) {
+              // 複数の観測所がある場合は最初のものを使用
+              setRealtimeWaterLevel(data.data[0]);
+            } else {
+              console.warn('No water level data in response:', data.error);
+            }
+          } catch (jsonError) {
+            console.error('Failed to parse water level response as JSON:', jsonError);
+          }
+        } else {
+          console.error('Failed to fetch realtime water level:', response.status, response.statusText);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error('⏱️ Request timeout while fetching water level (10 seconds)');
+          } else {
+            console.error('❌ Error fetching realtime water level:', error.message);
+          }
+        } else {
+          console.error('❌ Unknown error:', error);
+        }
+        // エラー時は何も表示しない（デフォルトの水位表示にフォールバック）
+      } finally {
+        setLoadingWaterLevel(false);
+      }
+    };
+
+    fetchWaterLevel();
+  }, [river.dpfObservationId, river.observatoryName]);
 
   // 国土交通省DPF GraphQL APIから観測所データとカメラ情報を取得
   useEffect(() => {
@@ -180,15 +248,100 @@ export function RiverDetail({ river }: RiverDetailProps) {
           <div className="flex items-center gap-2 mb-3">
             <Droplets className="w-5 h-5 text-blue-600" />
             <h3 className="text-slate-900">現在の水位</h3>
+            {loadingWaterLevel && (
+              <Badge variant="outline" className="ml-2">読み込み中...</Badge>
+            )}
+            {realtimeWaterLevel && (
+              <Badge variant="outline" className="ml-2" style={{ backgroundColor: '#effcff', borderColor: '#0372ac', color: '#0372ac' }}>
+                リアルタイムデータ
+              </Badge>
+            )}
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-slate-600">現在: {river.waterLevel.toFixed(2)}m</span>
-              <span className="text-slate-600">警戒水位: {river.warningLevel.toFixed(2)}m</span>
+          
+          {realtimeWaterLevel ? (
+            // リアルタイム水位データを表示
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-900">{realtimeWaterLevel.observationName}</span>
+                <Badge 
+                  variant={realtimeWaterLevel.status === 'danger' ? 'destructive' : 'default'}
+                  className={
+                    realtimeWaterLevel.status === 'warning' ? 'bg-red-500' : 
+                    realtimeWaterLevel.status === 'caution' ? 'bg-amber-500' : 
+                    'bg-green-500'
+                  }
+                >
+                  {realtimeWaterLevel.status === 'danger' ? '氾濫発生' : 
+                   realtimeWaterLevel.status === 'warning' ? '警戒' : 
+                   realtimeWaterLevel.status === 'caution' ? '注意' : 
+                   '正常'}
+                </Badge>
+              </div>
+              
+              <div className="bg-white rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600">観測時刻:</span>
+                  <span className="text-slate-900">{realtimeWaterLevel.observationTime}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600">現在水位:</span>
+                  <span className="text-slate-900">{realtimeWaterLevel.currentWaterLevel.toFixed(2)}m</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600">水防団待機水位:</span>
+                  <span className="text-slate-700">{realtimeWaterLevel.warningLevel.toFixed(2)}m</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600">氾濫危険水位:</span>
+                  <span className="text-amber-700">{realtimeWaterLevel.dangerLevel.toFixed(2)}m</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600">氾濫発生水位:</span>
+                  <span className="text-red-700">{realtimeWaterLevel.floodLevel.toFixed(2)}m</span>
+                </div>
+              </div>
+              
+              {river.waterLevelUrl && (
+                <a 
+                  href={river.waterLevelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 transition-colors p-2 bg-blue-50 rounded-lg hover:bg-blue-100"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>詳細な水位情報を見る</span>
+                </a>
+              )}
             </div>
-            <Progress value={waterLevelPercentage} className="h-3" />
-            <p className="text-slate-500">警戒水位まで: {(river.warningLevel - river.waterLevel).toFixed(2)}m</p>
-          </div>
+          ) : (
+            // デフォルトの水位表示（観測所IDが未設定の場合）
+            <div className="space-y-2">
+              {river.waterLevel != null && river.warningLevel != null ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">現在: {river.waterLevel.toFixed(2)}m</span>
+                    <span className="text-slate-600">警戒水位: {river.warningLevel.toFixed(2)}m</span>
+                  </div>
+                  <Progress value={waterLevelPercentage} className="h-3" />
+                  <p className="text-slate-500">警戒水位まで: {(river.warningLevel - river.waterLevel).toFixed(2)}m</p>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-slate-500">この川の水位データは準備中です</p>
+                  {river.waterInfoUrl && (
+                    <a 
+                      href={river.waterInfoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+                    >
+                      国土交通省のサイトで確認する →
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 
@@ -304,7 +457,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
                       >
                         <div className="flex items-center justify-center gap-2">
                           <Video className="w-4 h-4" />
-                          <span>ライブカメラを見る</span>
+                          <span>ライブカメ���を見る</span>
                           <ExternalLink className="w-4 h-4" />
                         </div>
                       </a>

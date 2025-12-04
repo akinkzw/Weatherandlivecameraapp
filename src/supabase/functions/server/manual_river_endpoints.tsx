@@ -195,7 +195,7 @@ export async function addRiversBulk(c: any) {
     
     for (let i = 0; i < rivers.length; i++) {
       const riverData = rivers[i];
-      const { name, prefecture, municipality, latitude, longitude, scale, region, basinName, stationName } = riverData;
+      const { name, prefecture, municipality, latitude, longitude, scale, region, basinName, stationName, dpfObservatoryId, waterLevelUrl } = riverData;
       
       try {
         // 必須フ��ールドのバリデーション
@@ -243,15 +243,17 @@ export async function addRiversBulk(c: any) {
           latitude: roundedLat,
           longitude: roundedLon,
           length: 0,
-          waterLevel: 0,
-          warningLevel: 0,
+          waterLevel: null, // 🔄 ダミー値ではなくnullに変更
+          warningLevel: null, // 🔄 ダミー値ではなくnullに変更
           currentStatus: 'normal' as const,
           cameras: [],
           weather: [],
           dataSource: 'manual' as const,
           scale: riverScale,
           observationCount: 0,
-          dpfStations: []
+          dpfStations: [],
+          dpfObservatoryId: dpfObservatoryId || '', // 🆕 DPF観測所ID
+          waterLevelUrl: waterLevelUrl || '' // 🆕 水位情報URL
         };
         
         await kv.set(`river:${maxId}`, riverRecord);

@@ -176,7 +176,7 @@ function App() {
           
           const uniqueRiversArray = Array.from(uniqueRivers.values());
           console.log('重複排除後の川の数:', uniqueRiversArray.length);
-          console.log('削除された��複データ:', (data.rivers?.length || 0) - uniqueRiversArray.length, '件');
+          console.log('削除された重複データ:', (data.rivers?.length || 0) - uniqueRiversArray.length, '件');
           
           setRivers(uniqueRiversArray);
         } else {
@@ -206,21 +206,12 @@ function App() {
           const data = await response.json();
           console.log('バナーデータ取得成功:', data);
           console.log('完全なバナーデータ:', JSON.stringify(data, null, 2));
-          setBannerData(data);
+          // サーバーが { success: true, data: {...} } という形式で返しているので、data.dataを使用
+          setBannerData(data.success && data.data ? data.data : data);
         } else {
           const errorData = await response.json().catch(() => ({}));
           console.error('バナーデータの取得に失敗しました:', response.status, response.statusText);
           console.error('エラー詳細:', errorData);
-          
-          // 診断情報を表示
-          if (errorData.diagnostics) {
-            console.error('🔍 診断情報:');
-            console.error('  - リクエストURL:', errorData.diagnostics.url);
-            console.error('  - APIキー（プレビュー）:', errorData.diagnostics.apiKeyPreview);
-            console.error('  - 環境変数を使用:', errorData.diagnostics.usedEnvVar);
-            console.error('  - ハードコードされたキーを使用:', errorData.diagnostics.usedHardcoded);
-            console.error('  - メッセージ:', errorData.diagnostics.message);
-          }
         }
       } catch (error) {
         console.error('バナーデータの取得エラー:', error);
@@ -239,7 +230,7 @@ function App() {
     'kansai': ['滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
     'chugoku': ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
     'shikoku': ['徳島県', '香川県', '愛媛県', '高知県'],
-    'kyushu-okinawa': ['福���県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+    'kyushu-okinawa': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
   };
 
   const handleAreaClick = (area: string) => {

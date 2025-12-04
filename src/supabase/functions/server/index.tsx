@@ -120,7 +120,7 @@ async function handler(req: Request): Promise<Response> {
       return jsonResponse({ success: true, data: result });
     }
 
-    // 全川取得
+    // 全���取得
     if (path === '/make-server-5f24a873/rivers' && method === 'GET') {
       const prefecture = url.searchParams.get('prefecture');
       const allRiversData = await getAllRiversWithPagination();
@@ -173,10 +173,11 @@ async function handler(req: Request): Promise<Response> {
     }
 
     // リアルタイム水位
-    const waterLevelMatch = path.match(/^\/make-server-5f24a873\/water-level\/(.+)$/);
+    const waterLevelMatch = path.match(/^\/make-server-5f24a873\/(realtime-)?water-level\/(.+)$/);
     if (waterLevelMatch && method === 'GET') {
-      const stationId = waterLevelMatch[1];
-      const waterLevelData = await fetchRealtimeWaterLevel(stationId);
+      const stationId = waterLevelMatch[2];
+      const observatory = url.searchParams.get('observatory') || undefined;
+      const waterLevelData = await fetchRealtimeWaterLevel(stationId, observatory);
       return jsonResponse({ success: true, data: waterLevelData });
     }
 
@@ -264,7 +265,11 @@ async function handler(req: Request): Promise<Response> {
       }
       
       const data = await response.json();
-      return jsonResponse({ success: true, data });
+      
+      // microCMSはリスト形式でデータを返すので、最初のcontentを取得
+      const bannerData = data.contents && data.contents.length > 0 ? data.contents[0] : data;
+      
+      return jsonResponse({ success: true, data: bannerData });
     }
 
     // 404

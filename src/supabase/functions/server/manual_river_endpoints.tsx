@@ -165,19 +165,16 @@ export async function getRiverRainfallStatus(c: any) {
 /**
  * CSVから複数の川を一括登録するエンドポイント
  */
-export async function addRiversBulk(c: any) {
+export async function addRiversBulk(rivers: any[]) {
   try {
-    const body = await c.req.json();
-    const { rivers } = body;
-    
     console.log('=== Bulk Adding Rivers ===');
     console.log('Number of rivers to add:', rivers?.length || 0);
     
     if (!rivers || !Array.isArray(rivers) || rivers.length === 0) {
-      return c.json({
+      return {
         success: false,
-        error: '川のデータが不正です。配列形式で送信してくさい。'
-      }, 400);
+        error: '川のデータが不正です。配列形式で送信してください。'
+      };
     }
     
     // 既存の川の数を取得してIDを決定
@@ -190,7 +187,12 @@ export async function addRiversBulk(c: any) {
     const results = {
       success: [] as any[],
       errors: [] as any[],
-      total: rivers.length
+      total: rivers.length,
+      stats: {
+        success: 0,
+        failed: 0,
+        skipped: 0
+      }
     };
     
     for (let i = 0; i < rivers.length; i++) {
@@ -198,13 +200,14 @@ export async function addRiversBulk(c: any) {
       const { name, prefecture, municipality, latitude, longitude, scale, region, basinName, stationName, dpfObservatoryId, waterLevelUrl } = riverData;
       
       try {
-        // 必須フ��ールドのバリデーション
+        // 必須フィールドのバリデーション
         if (!name || !prefecture || !latitude || !longitude) {
           results.errors.push({
             index: i + 1,
             name: name || '不明',
             error: '必須フィールドが不足しています（川の名前、都道府県、緯度、経度が必要です）'
           });
+          results.stats.failed++;
           continue;
         }
         
@@ -218,6 +221,7 @@ export async function addRiversBulk(c: any) {
             name: name,
             error: '緯度または経度が数値ではありません'
           });
+          results.stats.failed++;
           continue;
         }
         
@@ -252,7 +256,7 @@ export async function addRiversBulk(c: any) {
           scale: riverScale,
           observationCount: 0,
           dpfStations: [],
-          dpfObservatoryId: dpfObservatoryId || '', // 🆕 DPF観測所ID
+          dpfObservationId: dpfObservatoryId || '', // 🆕 DPF観測所ID（フィールド名を統一）
           waterLevelUrl: waterLevelUrl || '' // 🆕 水位情報URL
         };
         
@@ -264,6 +268,7 @@ export async function addRiversBulk(c: any) {
           prefecture: prefecture,
           id: maxId
         });
+        results.stats.success++;
         
         console.log(`✅ Added: ${name} (${prefecture}) - ID: ${maxId}`);
         
@@ -274,23 +279,25 @@ export async function addRiversBulk(c: any) {
           name: name || '不明',
           error: String(error)
         });
+        results.stats.failed++;
       }
     }
     
-    console.log(`✅ Bulk registration complete: ${results.success.length} success, ${results.errors.length} errors`);
+    console.log(`✅ Bulk registration complete: ${results.stats.success} success, ${results.stats.failed} errors`);
     
-    return c.json({
+    return {
       success: true,
-      message: `${results.success.length}件の川を追加しました`,
-      results: results
-    });
+      message: `${results.stats.success}件の川を追加しました`,
+      results: results,
+      stats: results.stats
+    };
     
   } catch (error) {
     console.error('Error in bulk river registration:', error);
-    return c.json({
+    return {
       success: false,
       error: '一括登録に失敗しました',
       details: String(error)
-    }, 500);
+    };
   }
 }

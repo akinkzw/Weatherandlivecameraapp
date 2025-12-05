@@ -13,6 +13,7 @@ import { DpfSearchTest } from './components/DpfSearchTest';
 import { DummyValueCleaner } from './components/DummyValueCleaner';
 import { SimpleDpfIdTest } from './components/SimpleDpfIdTest';
 import { ServerHealthCheck } from './components/ServerHealthCheck';
+import { DpfIdUpdater } from './components/DpfIdUpdater';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
@@ -322,6 +323,33 @@ function App() {
   // CSV一括登録画面
   if (testMode === 'bulk-upload') {
     return <BulkRiverUpload />;
+  }
+  
+  // DPF ID 更新画面
+  if (testMode === 'dpf-id-updater') {
+    console.log('✅ DPF ID Updater モードでレンダリング中');
+    return (
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="mb-2" style={{ color: '#0372ac' }}>
+              DPF観測所ID 一括更新
+            </h1>
+            <p className="text-slate-600">
+              川の防災情報サイトのCSVファイルで既存データを更新します
+            </p>
+          </div>
+          <DpfIdUpdater />
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/'}
+            className="w-full"
+          >
+            メインページに戻る
+          </Button>
+        </div>
+      </div>
+    );
   }
   
   // DPF検索テスト画面
@@ -695,6 +723,168 @@ function App() {
         onClick={() => window.location.href = '/?test=server-health'}
       >
         🔍 サーバー診断
+      </Button>
+      
+      {/* Database Debug Button - デバッグ用 */}
+      <Button
+        variant="outline"
+        className="fixed bottom-44 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
+        style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+        onClick={async () => {
+          try {
+            console.log('🔍 Checking database structure...');
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/debug-structure`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${publicAnonKey}`,
+                },
+              }
+            );
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+              console.log('📊 データベース構造:', data);
+              console.log('📊 利用可能なフィールド:', data.availableFields);
+              console.log('📊 サンプルデータ:', data.samples);
+              
+              // dpfStationsフィールドの内容を詳しく確認
+              if (data.samples && data.samples.length > 0) {
+                data.samples.forEach((sample: any, index: number) => {
+                  console.log(`サンプル${index + 1} - dpfStations:`, sample.dpfStations);
+                  console.log(`サンプル${index + 1} - dpfObservationId:`, sample.dpfObservationId);
+                  console.log(`サンプル${index + 1} - waterLevelUrl:`, sample.waterLevelUrl);
+                });
+              }
+              
+              alert(
+                `✅ データベース構造を確認しました\n\n` +
+                `総件数: ${data.totalCount}件\n\n` +
+                `利用可能なフィールド:\n${data.availableFields.join(', ')}\n\n` +
+                `詳細はブラウザのコンソール（F12）を確認してください。`
+              );
+            } else {
+              console.error('❌ Error:', data);
+              alert(`❌ エラー: ${data.error || data.message || '不明なエラー'}`);
+            }
+          } catch (error) {
+            console.error('❌ Exception:', error);
+            alert(`❌ エラー: ${error}`);
+          }
+        }}
+      >
+        🐛 DB構造確認
+      </Button>
+      
+      {/* DPF検索ボタン - デバッグ用 */}
+      <Button
+        variant="outline"
+        className="fixed bottom-64 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
+        style={{ borderColor: '#8b5cf6', color: '#8b5cf6' }}
+        onClick={async () => {
+          const riverName = prompt('検索する川の名前を入力してください:', '笛吹川');
+          if (!riverName) return;
+          
+          try {
+            console.log(`🔍 ローカルデータベース検索: ${riverName}`);
+            
+            // まずローカルデータベースから検索
+            const localResponse = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${publicAnonKey}`,
+                },
+              }
+            );
+            
+            const localData = await localResponse.json();
+            
+            if (localResponse.ok && localData.success) {
+              const matchingRivers = localData.rivers.filter((r: any) => 
+                r.name && r.name.includes(riverName)
+              );
+              
+              if (matchingRivers.length > 0) {
+                console.log(`✅ ローカルDBに ${matchingRivers.length}件の「${riverName}」が見つかりました:`, matchingRivers);
+                console.table(matchingRivers.map((r: any) => ({
+                  川名: r.name,
+                  都道府県: r.prefecture,
+                  市区町村: r.municipality,
+                  水系: r.basinName,
+                  観測所: r.stationName,
+                  'DPF ID': r.dpfObservationId || '(なし)',
+                  '水位URL': r.waterLevelUrl || '(なし)',
+                })));
+                
+                let resultText = `✅ 「${riverName}」の検索結果: ${matchingRivers.length}件\n\n`;
+                matchingRivers.forEach((r: any, index: number) => {
+                  resultText += `${index + 1}. ${r.name} (${r.prefecture} ${r.municipality || ''})\n`;
+                  resultText += `   水系: ${r.basinName || '(なし)'}\n`;
+                  resultText += `   観測所: ${r.stationName || '(なし)'}\n`;
+                  resultText += `   DPF観測所ID: ${r.dpfObservationId || '(なし)'}\n`;
+                  resultText += `   水位情報URL: ${r.waterLevelUrl || '(なし)'}\n`;
+                  resultText += `   緯度: ${r.latitude || '(なし)'}, 経度: ${r.longitude || '(なし)'}\n\n`;
+                });
+                
+                alert(resultText + '\n詳細はブラウザのコンソール（F12）を確認してください。');
+                return;
+              } else {
+                alert(`⚠️ ローカルDBに「${riverName}」が見つかりませんでした。\n\n別の川名を試してください。`);
+                return;
+              }
+            }
+            
+            // DPF API検索（フォールバック）
+            console.log(`🔍 DPF API検索: ${riverName}`);
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/dpf-search?river=${encodeURIComponent(riverName)}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${publicAnonKey}`,
+                },
+              }
+            );
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+              console.log('✅ DPF検索結果:', data);
+              console.log('📊 検索クエリ:', data.query);
+              console.log('📊 該当件数:', data.count);
+              console.log('📊 データ:', data.data);
+              
+              if (data.data && data.data.length > 0) {
+                console.table(data.data);
+                
+                let resultText = `✅ 「${riverName}」の検索結果: ${data.count}件\n\n`;
+                data.data.forEach((item: any, index: number) => {
+                  resultText += `${index + 1}. ${item.name || item.obs_name}\n`;
+                  resultText += `   ID: ${item.id}\n`;
+                  resultText += `   河川名: ${item.river_name || '(なし)'}\n`;
+                  resultText += `   観測所: ${item.obs_name || '(なし)'}\n`;
+                  resultText += `   緯度: ${item.latitude || '(なし)'}, 経度: ${item.longitude || '(なし)'}\n\n`;
+                });
+                
+                alert(resultText);
+              } else {
+                alert(`⚠️ 「${riverName}」に該当するデータが見つかりませんでした。`);
+              }
+            } else {
+              console.error('❌ Error:', data);
+              alert(`❌ DPF API エラー: ${data.error || data.message || '不明なエラー'}\n\n${data.suggestion || ''}`);
+            }
+          } catch (error) {
+            console.error('❌ Exception:', error);
+            alert(`❌ エラー: ${error}`);
+          }
+        }}
+      >
+        🔍 川検索
       </Button>
     </div>
   );

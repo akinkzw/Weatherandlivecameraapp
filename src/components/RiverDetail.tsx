@@ -457,7 +457,7 @@ export function RiverDetail({ river }: RiverDetailProps) {
                       >
                         <div className="flex items-center justify-center gap-2">
                           <Video className="w-4 h-4" />
-                          <span>ライブカメ���を見る</span>
+                          <span>ライブカメを見る</span>
                           <ExternalLink className="w-4 h-4" />
                         </div>
                       </a>

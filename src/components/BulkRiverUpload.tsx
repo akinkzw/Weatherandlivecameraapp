@@ -171,24 +171,38 @@ export function BulkRiverUpload() {
         });
         
         try {
-          // バッチをCSVテキストに変換
-          const batchCSV = batchLines.join('\n');
-          console.log(`📤 Sending batch ${i + 1}: ${batchLines.length} lines, ${batchCSV.length} bytes`);
-          const batchBlob = new Blob([batchCSV], { type: 'text/csv' });
-          const batchFile = new File([batchBlob], `batch_${i}.csv`, { type: 'text/csv' });
+          // バッチをCSVからJSONに変換
+          const riversBatch = batchLines.map((line, lineIndex) => {
+            const columns = line.split(',').map(col => col.trim());
+            
+            // CSVフォーマット: 川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL
+            return {
+              name: columns[0] || '',
+              prefecture: columns[1] || '',
+              municipality: columns[2] || '',
+              basinName: columns[3] || '',
+              stationName: columns[4] || '',
+              latitude: columns[5] || '',
+              longitude: columns[6] || '',
+              scale: columns[7] || '',
+              dpfObservatoryId: columns[8] || '', // DPF観測所ID
+              waterLevelUrl: columns[9] || '' // 水位情報URL
+            };
+          });
           
-          const formData = new FormData();
-          formData.append('file', batchFile);
-
+          console.log(`📤 Sending batch ${i + 1}: ${riversBatch.length} rivers`);
+          console.log('First river in batch:', riversBatch[0]);
+          
           console.log(`🌐 Fetching batch ${i + 1}...`);
           const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/bulk-upload`,
+            `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/bulk`,
             {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${publicAnonKey}`,
+                'Content-Type': 'application/json',
               },
-              body: formData,
+              body: JSON.stringify({ rivers: riversBatch }),
             }
           );
 
@@ -257,6 +271,7 @@ export function BulkRiverUpload() {
   // サンプルCSVダウンロード
   const downloadSampleCSV = () => {
     const sampleData = `川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL
+釜無川,山梨県,南アルプス市,富士川,竜王,35.683,138.467,large,1901204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283719030&timeType=60
 笛吹川,山梨県,笛吹市,富士川,石和,35.648,138.640,medium,1901204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283719010&timeType=60
 手取川,石川県,白山市,手取川,鶴来,36.537,136.570,medium,1701204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283618010&timeType=60
 神通川,富山県,富山市,神通川,神通大橋,36.689,137.200,large,1601204,https://www.river.go.jp/kawabou/ipSuiiInfo.do?gmenKindCode=1&obsnKindCode=1&stCd=304011283517010&timeType=60`;
@@ -298,12 +313,12 @@ export function BulkRiverUpload() {
           </h2>
           <div className="space-y-3 text-sm">
             <p className="text-slate-700">
-              以下の8列をカンマ区切りで記述してください：
+              以下の10列をカンマ区切りで記述してください：
             </p>
             <div className="bg-slate-50 p-4 rounded-lg font-mono text-xs overflow-x-auto">
-              川の名前,都道府県,市区町村,水系名称,観測所名称,度,経度,規模
+              川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
               <div>
                 <span className="font-semibold text-slate-700">規模：</span>
                 <span className="text-slate-600"> large / medium / small （任意）</span>
@@ -314,12 +329,26 @@ export function BulkRiverUpload() {
               </div>
               <div>
                 <span className="font-semibold text-slate-700">観測所名称：</span>
-                <span className="text-slate-600"> DPF APIの観測所名</span>
+                <span className="text-slate-600"> 竜王、石和など</span>
               </div>
               <div>
                 <span className="font-semibold text-slate-700">緯度経度：</span>
                 <span className="text-slate-600"> 自動で小数点以下6桁に丸めます</span>
               </div>
+              <div>
+                <span className="font-semibold text-blue-700">🆕 DPF観測所ID：</span>
+                <span className="text-blue-600"> 町コード（例: 1901204）</span>
+              </div>
+              <div>
+                <span className="font-semibold text-blue-700">🆕 水位情報URL：</span>
+                <span className="text-blue-600"> 国土交通省の水位詳細ページ</span>
+              </div>
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-300 rounded-lg">
+              <p className="text-sm text-blue-900">
+                <strong>💡 リアルタイム水位機能：</strong> DPF観測所ID（町コード）を設定すると、川の詳細モーダルで国土交通省のリアルタイム水位データが自動的に表示されます。
+                サンプルCSVには釜無川・笛吹川・手取川・神通川のデータが含まれています。
+              </p>
             </div>
           </div>
           <Button
@@ -329,7 +358,7 @@ export function BulkRiverUpload() {
             style={{ borderColor: '#0372ac', color: '#0372ac' }}
           >
             <Download className="w-4 h-4 mr-2" />
-            サンプルCSVをダウンロード
+            サンプルCSVをダウンロード（リアルタイム水位対応）
           </Button>
         </Card>
 
@@ -509,12 +538,13 @@ export function BulkRiverUpload() {
           
           {/* バックアップ＆クリア */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* バックアップボタン */}
+            {/* データベース構造確認ボタン（デバッグ用） */}
             <Button
               onClick={async () => {
                 try {
+                  console.log('🔍 Checking database structure...');
                   const response = await fetch(
-                    `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/backup`,
+                    `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/debug-structure`,
                     {
                       method: 'GET',
                       headers: {
@@ -522,7 +552,66 @@ export function BulkRiverUpload() {
                       },
                     }
                   );
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok && data.success) {
+                    console.log('📊 データベース構造:', data);
+                    console.log('📊 利用可能なフィールド:', data.availableFields);
+                    console.log('📊 サンプルデータ:', data.samples);
+                    
+                    alert(
+                      `✅ データベース構造を確認しました\n\n` +
+                      `総件数: ${data.totalCount}件\n\n` +
+                      `利用可能なフィールド:\n${data.availableFields.join(', ')}\n\n` +
+                      `詳細はブラウザのコンソール（F12）を確認してください。`
+                    );
+                  } else {
+                    console.error('❌ Error:', data);
+                    alert(`❌ エラー: ${data.error || data.message || '不明なエラー'}`);
+                  }
+                } catch (error) {
+                  console.error('❌ Exception:', error);
+                  alert(`❌ エラー: ${error}`);
+                }
+              }}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4" />
+              データベース構造を確認（デバッグ）
+            </Button>
+            
+            {/* バックアップボタン */}
+            <Button
+              onClick={async () => {
+                try {
+                  console.log('🔍 Requesting backup...');
+                  const response = await fetch(
+                    `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers-backup-csv`,
+                    {
+                      method: 'GET',
+                      headers: {
+                        'Authorization': `Bearer ${publicAnonKey}`,
+                      },
+                    }
+                  );
+                  
+                  console.log('📡 Response status:', response.status);
+                  console.log('📡 Response headers:', response.headers);
+                  
                   if (response.ok) {
+                    const contentType = response.headers.get('Content-Type');
+                    
+                    // JSONエラーレスポンスの場合
+                    if (contentType && contentType.includes('application/json')) {
+                      const errorData = await response.json();
+                      console.error('❌ Server error:', errorData);
+                      alert(`❌ バックアップに失敗しました\n\nエラー: ${errorData.message || errorData.error || 'Unknown error'}`);
+                      return;
+                    }
+                    
+                    // CSVレスポンスの場合
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const link = document.createElement('a');
@@ -530,11 +619,15 @@ export function BulkRiverUpload() {
                     link.download = `rivers_backup_${new Date().toISOString().split('T')[0]}.csv`;
                     link.click();
                     window.URL.revokeObjectURL(url);
-                    alert('✅ バックアップが完了しました');
+                    alert('✅ バックアップが完了しました！\n\n全ての川データ（DPF観測所ID、水位情報URLを含む10列フォーマット）がCSVファイルに保存されました。');
                   } else {
-                    alert('❌ バックアップに失敗しました');
+                    // HTTPエラーの場合
+                    const errorText = await response.text();
+                    console.error('❌ HTTP error:', response.status, errorText);
+                    alert(`❌ バックアップに失敗しました\n\nHTTPステータス: ${response.status}\nエラー: ${errorText}`);
                   }
                 } catch (error) {
+                  console.error('❌ Exception:', error);
                   alert(`❌ エラー: ${error}`);
                 }
               }}
@@ -563,7 +656,7 @@ export function BulkRiverUpload() {
                   );
                   const data = await response.json();
                   if (data.success) {
-                    alert(`✅ ${data.deletedCount}件の川データを削除しました。\n\nCSVファイルを選択して、再登録してください。`);
+                    alert(`✅ ${data.deletedCount}件の川データを削除しました。\n\nCSVファイルを選択して、登録してください。`);
                   } else {
                     alert(`❌ エラー: ${data.error}`);
                   }

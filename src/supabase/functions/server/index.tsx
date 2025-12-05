@@ -1,3 +1,4 @@
+// DPFアプリ - メインサーバー（最終更新: 2025-12-04T17:24）
 import * as kv from "./kv_store.tsx";
 import { getRiverCoordinates } from "./river_coordinates.tsx";
 import { getRiverCameraInfo } from './river_graphql.tsx';
@@ -120,7 +121,88 @@ async function handler(req: Request): Promise<Response> {
       return jsonResponse({ success: true, data: result });
     }
 
-    // 全���取得
+    // DPF API検索（川の名前で検索）
+    if (path === '/make-server-5f24a873/dpf-search' && method === 'GET') {
+      const apiKey = Deno.env.get('DPF_API_KEY');
+      if (!apiKey) {
+        return jsonResponse({ success: false, error: 'DPF_API_KEY not set' }, 400);
+      }
+
+      const riverName = url.searchParams.get('river');
+      if (!riverName) {
+        return jsonResponse({ success: false, error: 'river parameter is required' }, 400);
+      }
+
+      // 水位データセット（hwq_stage）のメタデータを検索
+      const query = `
+        query {
+          hwq_stage_metadata(
+            where: { name: { _like: "%${riverName}%" } }
+            limit: 20
+          ) {
+            id
+            name
+            river_name
+            obs_name
+            latitude
+            longitude
+          }
+        }
+      `;
+      
+      try {
+        console.log('🔍 DPF API検索開始:', riverName);
+        
+        // カスタムHTTPクライアントを作成（SSL証明書検証の問題を回避）
+        const client = Deno.createHttpClient({
+          // SSL証明書検証を緩和
+        });
+        
+        console.log('📡 リクエスト先: https://data-platform.mlit.go.jp/datalake/admin/api/graphql/execute');
+        
+        const response = await fetch('https://data-platform.mlit.go.jp/datalake/admin/api/graphql/execute', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'apikey': apiKey 
+          },
+          body: JSON.stringify({ query }),
+          client, // カスタムHTTPクライアントを使用
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ API error:', response.status, errorText);
+          return jsonResponse({ success: false, error: `API error: ${response.status} - ${errorText}` }, 500);
+        }
+
+        const result = await response.json();
+        console.log('✅ DPF API検索成功:', result);
+        
+        return jsonResponse({ 
+          success: true, 
+          query: riverName,
+          data: result.data?.hwq_stage_metadata || [],
+          count: result.data?.hwq_stage_metadata?.length || 0
+        });
+      } catch (error) {
+        console.error('❌ DPF API検索エラー:', error);
+        
+        // エラーの詳細情報を返す
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        
+        return jsonResponse({ 
+          success: false, 
+          error: errorMessage,
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          stack: errorStack,
+          suggestion: 'DPF APIエンドポイントまたはSSL証明書に問題がある可能性があります。'
+        }, 500);
+      }
+    }
+
+    // 全取得
     if (path === '/make-server-5f24a873/rivers' && method === 'GET') {
       const prefecture = url.searchParams.get('prefecture');
       const allRiversData = await getAllRiversWithPagination();
@@ -136,6 +218,260 @@ async function handler(req: Request): Promise<Response> {
       }
       
       return jsonResponse({ success: true, rivers, count: rivers.length });
+    }
+
+    // データベース構造確認用（デバッグ）
+    if (path === '/make-server-5f24a873/rivers/debug-structure' && method === 'GET') {
+      const allRiversData = await getAllRiversWithPagination();
+      
+      if (allRiversData.length === 0) {
+        return jsonResponse({ 
+          success: true, 
+          message: 'データベースにデータがありません',
+          totalCount: 0
+        });
+      }
+      
+      const rivers = allRiversData.map(item => {
+        const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+        return value;
+      });
+      
+      // 最初の3件のサンプルデータとフィールドリストを返す
+      const samples = rivers.slice(0, 3);
+      const allFields = new Set<string>();
+      
+      rivers.forEach(river => {
+        Object.keys(river).forEach(key => allFields.add(key));
+      });
+      
+      return jsonResponse({
+        success: true,
+        totalCount: rivers.length,
+        availableFields: Array.from(allFields).sort(),
+        samples: samples,
+        message: 'データベースに保存されているフィールドとサンプルデータです'
+      });
+    }
+
+    // DPF観測所ID 一括更新
+    if (path === '/make-server-5f24a873/rivers/update-dpf-ids' && method === 'POST') {
+      try {
+        const startTime = Date.now();
+        const body = await req.json();
+        const csvData = body.csvData;
+        
+        if (!csvData || !Array.isArray(csvData) || csvData.length === 0) {
+          return jsonResponse({ 
+            success: false, 
+            error: 'csvData is required and must be a non-empty array' 
+          }, 400);
+        }
+        
+        console.log(`📊 Received ${csvData.length} CSV rows for DPF ID update`);
+        
+        // 既存の川データを全件取得
+        const allRiversData = await getAllRiversWithPagination();
+        console.log(`📊 Found ${allRiversData.length} existing rivers in database`);
+        
+        let updatedCount = 0;
+        let skippedCount = 0;
+        const examples: any[] = [];
+        const supabase = getSupabaseClient();
+        
+        // CSVデータでループ
+        for (const csvRow of csvData) {
+          const riverName = csvRow.riverName;
+          const municipalityCode = csvRow.municipalityCode;
+          const basinName = csvRow.basinName;
+          const stationName = csvRow.stationName;
+          
+          if (!riverName || !municipalityCode) {
+            skippedCount++;
+            continue;
+          }
+          
+          // 既存データから同じ川名のデータを検索
+          const matchingRivers = allRiversData.filter(item => {
+            const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+            const dbRiverName = value.name || '';
+            
+            // カッコ内の観測所名を除去して比較（例：「庄内川（枇杷島）」→「庄内川」）
+            const dbRiverNameWithoutStation = dbRiverName.replace(/[（(].*?[）)]/g, '').trim();
+            
+            // 完全一致または部分一致でマッチング
+            return dbRiverName === riverName || 
+                   dbRiverNameWithoutStation === riverName ||
+                   dbRiverName.includes(riverName);
+          });
+          
+          if (matchingRivers.length === 0) {
+            skippedCount++;
+            continue;
+          }
+          
+          // マッチした川データを更新
+          for (const riverItem of matchingRivers) {
+            const riverData = typeof riverItem.value === 'string' 
+              ? JSON.parse(riverItem.value) 
+              : riverItem.value;
+            
+            // DPF観測所IDと関連情報を追加
+            riverData.dpfObservationId = municipalityCode;
+            riverData.basinName = basinName;
+            riverData.stationName = stationName;
+            riverData.waterLevelUrl = `https://www.river.go.jp/kawabou/ipSuiiKobetu.do?obsrvId=${municipalityCode}`;
+            
+            // データベースを更新
+            const { error } = await supabase
+              .from('kv_store_5f24a873')
+              .update({ value: riverData })
+              .eq('key', riverItem.key);
+            
+            if (error) {
+              console.error(`❌ Failed to update ${riverItem.key}:`, error);
+            } else {
+              updatedCount++;
+              
+              // 最初の3件を例として保存
+              if (examples.length < 3) {
+                examples.push({
+                  riverName: riverData.name,
+                  prefecture: riverData.prefecture,
+                  municipalityCode: municipalityCode,
+                  basinName: basinName,
+                  stationName: stationName,
+                });
+              }
+            }
+          }
+        }
+        
+        const processingTime = `${((Date.now() - startTime) / 1000).toFixed(2)}秒`;
+        
+        console.log(`✅ Update complete: ${updatedCount} updated, ${skippedCount} skipped`);
+        
+        return jsonResponse({
+          success: true,
+          updatedCount,
+          skippedCount,
+          processingTime,
+          examples,
+          message: 'DPF観測所IDの更新が完了しました'
+        });
+        
+      } catch (error) {
+        console.error('❌ Error updating DPF IDs:', error);
+        return jsonResponse({
+          success: false,
+          error: `${error}`
+        }, 500);
+      }
+    }
+
+    // 一括追加
+    if (path === '/make-server-5f24a873/rivers/bulk' && method === 'POST') {
+      const body = await req.json();
+      const result = await addRiversBulk(body.rivers);
+      return jsonResponse(result);
+    }
+
+    // バックアップ（CSV出力） - 個別取得より前に配置
+    if (path === '/make-server-5f24a873/rivers-backup-csv' && method === 'GET') {
+      try {
+        console.log('🔍 Starting backup process...');
+        
+        // ページネーション対応の全件取得を使用
+        const allData = await getAllRiversWithPagination();
+        console.log(`📊 Backup: Retrieved ${allData.length} items from database`);
+        
+        // データのパース処理を改善
+        const rivers = allData.map((item: any) => {
+          try {
+            // valueがすでにオブジェクトの場合と文字列の場合の両方に対応
+            const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+            return value;
+          } catch (parseError) {
+            console.error('Parse error for item:', item.key, parseError);
+            return item.value; // パースに失敗した場合はそのまま返す
+          }
+        });
+        
+        console.log(`📊 Backup: Parsed ${rivers.length} rivers`);
+        
+        // 最初の川データをサンプルとして出力（デバッグ用）
+        if (rivers.length > 0) {
+          console.log('📋 Sample river data:', JSON.stringify(rivers[0], null, 2));
+          console.log('📋 Available fields:', Object.keys(rivers[0]));
+        }
+        
+        if (!rivers || rivers.length === 0) {
+          console.log('⚠️ No rivers found in database');
+          return new Response('川の名前,都府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL\n', {
+            headers: {
+              'Content-Type': 'text/csv; charset=utf-8',
+              'Content-Disposition': 'attachment; filename="rivers_backup.csv"',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        }
+        
+        // CSVヘッダー
+        let csvContent = '川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL\n';
+        
+        // 各川のデータを追
+        let successCount = 0;
+        for (const river of rivers) {
+          try {
+            const name = river.name || '';
+            const prefecture = river.prefecture || '';
+            const municipality = river.municipality || '';
+            const riverSystem = river.basinName || ''; // ✅ riverSystem → basinName
+            const observatoryName = river.stationName || ''; // ✅ observatoryName → stationName
+            const latitude = river.latitude || '';
+            const longitude = river.longitude || '';
+            const scale = river.scale || '';
+            
+            // ✅ DPF観測所IDの取得ロジック
+            let dpfObservationId = '';
+            if (river.dpfObservationId) {
+              // 新しいフィールド名がある場合
+              dpfObservationId = river.dpfObservationId;
+            } else if (Array.isArray(river.dpfStations) && river.dpfStations.length > 0) {
+              // dpfStationsが配列の場合は最初の要素を取得
+              dpfObservationId = river.dpfStations[0];
+            } else if (river.dpfStations && typeof river.dpfStations === 'string') {
+              // dpfStationsが文字列の場合はそのまま使用
+              dpfObservationId = river.dpfStations;
+            }
+            
+            const waterLevelUrl = river.waterLevelUrl || '';
+            
+            csvContent += `${name},${prefecture},${municipality},${riverSystem},${observatoryName},${latitude},${longitude},${scale},${dpfObservationId},${waterLevelUrl}\n`;
+            successCount++;
+          } catch (csvError) {
+            console.error('CSV generation error for river:', river.name, csvError);
+          }
+        }
+        
+        console.log(`✅ Backup CSV generated: ${successCount} rivers successfully exported`);
+        
+        return new Response(csvContent, {
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': 'attachment; filename="rivers_backup.csv"',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } catch (error) {
+        console.error('❌ Backup error:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        return jsonResponse({ 
+          success: false, 
+          error: String(error),
+          message: 'バックアップ処理中にエラーが発生しました。詳細はサーバーログを確認してください。'
+        }, 500);
+      }
     }
 
     // 川詳細取得
@@ -158,11 +494,35 @@ async function handler(req: Request): Promise<Response> {
       return jsonResponse(result);
     }
 
-    // 一括追加
-    if (path === '/make-server-5f24a873/rivers/bulk' && method === 'POST') {
-      const body = await req.json();
-      const result = await addRiversBulk(body.rivers);
-      return jsonResponse(result);
+    // 全削除
+    if (path === '/make-server-5f24a873/rivers/clear-all' && method === 'DELETE') {
+      try {
+        const rivers = await kv.getByPrefix('river:');
+        
+        if (!rivers || rivers.length === 0) {
+          return jsonResponse({ success: true, deletedCount: 0, message: '削除するデータがありません' });
+        }
+        
+        const keys = rivers.map(river => {
+          const key = `river:${river.prefecture}:${river.name}`;
+          // 同じ都道府県・川名でも緯度経度が異なる場合は別のキーとして扱う
+          if (river.latitude && river.longitude) {
+            return `${key}:${river.latitude.toFixed(6)},${river.longitude.toFixed(6)}`;
+          }
+          return key;
+        });
+        
+        await kv.mdel(keys);
+        
+        return jsonResponse({ 
+          success: true, 
+          deletedCount: keys.length,
+          message: `${keys.length}件の川データを削除しました` 
+        });
+      } catch (error) {
+        console.error('Clear all error:', error);
+        return jsonResponse({ success: false, error: String(error) }, 500);
+      }
     }
 
     // 川の削除

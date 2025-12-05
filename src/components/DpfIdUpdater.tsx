@@ -184,38 +184,81 @@ export function DpfIdUpdater() {
       console.log(`📊 Parsed ${csvData.length} rows from CSV`);
       console.log('📊 Sample data:', csvData.slice(0, 3));
 
-      // サーバー経由で更新
-      const requestUrl = `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/update-dpf-ids`;
-      console.log('📡 Request URL:', requestUrl);
+      // バッチ処理：50件ずつ送信
+      const BATCH_SIZE = 50;
+      const batches = [];
+      for (let i = 0; i < csvData.length; i += BATCH_SIZE) {
+        batches.push(csvData.slice(i, i + BATCH_SIZE));
+      }
+      
+      console.log(`📦 Split into ${batches.length} batches of ${BATCH_SIZE} items each`);
 
-      const response = await fetch(requestUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ csvData }),
-      });
+      let totalUpdated = 0;
+      let totalSkipped = 0;
+      let failedBatches = 0;
 
-      console.log('📡 Response status:', response.status);
+      // 各バッチを順番に処理
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        const batchNumber = i + 1;
+        
+        console.log(`📤 Processing batch ${batchNumber}/${batches.length} (${batch.length} items)`);
 
-      const data = await response.json();
-      console.log('📡 Response data:', data);
+        const requestUrl = `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/rivers/update-dpf-ids`;
 
-      if (response.ok && data.success) {
+        try {
+          const response = await fetch(requestUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ csvData: batch }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              totalUpdated += data.updatedCount || 0;
+              totalSkipped += data.skippedCount || 0;
+              console.log(`✅ Batch ${batchNumber}: Updated ${data.updatedCount}, Skipped ${data.skippedCount}`);
+            } else {
+              failedBatches++;
+              console.error(`❌ Batch ${batchNumber} failed:`, data.error);
+            }
+          } else {
+            failedBatches++;
+            console.error(`❌ Batch ${batchNumber} HTTP error:`, response.status);
+          }
+        } catch (batchError) {
+          failedBatches++;
+          console.error(`❌ Batch ${batchNumber} error:`, batchError);
+        }
+
+        // 進捗状況を表示（中間結果）
         setResult({
           success: true,
-          message: `✅ 更新完了！\n\n更新件数: ${data.updatedCount}件\nスキップ: ${data.skippedCount}件\n処理時間: ${data.processingTime}`,
-          details: data,
+          message: `処理中... ${batchNumber}/${batches.length} バッチ完了\n\n更新: ${totalUpdated}件\nスキップ: ${totalSkipped}件`,
+          details: null,
         });
-        console.log('✅ Update result:', data);
-      } else {
-        setResult({
-          success: false,
-          message: `❌ 更新に失敗しました\n\nエラー: ${data.error || '不明なエラー'}`,
-        });
-        console.error('❌ Update failed:', data);
+
+        // 少し待機（サーバー負荷軽減）
+        if (i < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
+
+      // 最終結果
+      setResult({
+        success: true,
+        message: `✅ すべてのバッチ処理が完了しました！\n\n更新件数: ${totalUpdated}件\nスキップ: ${totalSkipped}件\n失敗バッチ: ${failedBatches}/${batches.length}`,
+        details: {
+          updatedCount: totalUpdated,
+          skippedCount: totalSkipped,
+          failedBatches,
+          totalBatches: batches.length,
+        },
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setResult({
@@ -343,7 +386,7 @@ export function DpfIdUpdater() {
         <div className="text-xs text-slate-500 space-y-1">
           <p>💡 <strong>仕組み:</strong></p>
           <ul className="list-disc list-inside space-y-1 ml-4">
-            <li>CSVの「河川名称」と既存データの「川の名前」をマッチング</li>
+            <li>CSVの「河��名称」と既存データの「川の名前」をマッチング</li>
             <li>「市区町村コード」をDPF観測所IDとして保存</li>
             <li>「水系名称」「観測所名称」も同時に更新</li>
             <li>水位情報URLを自動生成して保存</li>

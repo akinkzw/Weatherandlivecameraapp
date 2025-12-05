@@ -279,6 +279,16 @@ async function handler(req: Request): Promise<Response> {
         const examples: any[] = [];
         const supabase = getSupabaseClient();
         
+        // デバッグ：最初の3件のCSVデータをログ出力
+        console.log('📊 First 3 CSV rows:', csvData.slice(0, 3));
+        
+        // デバッグ：最初の3件の既存データをログ出力
+        const first3Rivers = allRiversData.slice(0, 3).map(item => {
+          const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+          return { name: value.name, prefecture: value.prefecture };
+        });
+        console.log('📊 First 3 existing rivers:', first3Rivers);
+        
         // CSVデータでループ
         for (const csvRow of csvData) {
           const riverName = csvRow.riverName;
@@ -291,6 +301,9 @@ async function handler(req: Request): Promise<Response> {
             continue;
           }
           
+          // デバッグ：最初の3件のマッチング詳細をログ出力
+          const isFirstThree = (updatedCount + skippedCount) < 3;
+          
           // 既存データから同じ川名のデータを検索
           const matchingRivers = allRiversData.filter(item => {
             const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
@@ -299,11 +312,21 @@ async function handler(req: Request): Promise<Response> {
             // カッコ内の観測所名を除去して比較（例：「庄内川（枇杷島）」→「庄内川」）
             const dbRiverNameWithoutStation = dbRiverName.replace(/[（(].*?[）)]/g, '').trim();
             
-            // 完全一致または部分一致でマッチング
-            return dbRiverName === riverName || 
+            const matched = dbRiverName === riverName || 
                    dbRiverNameWithoutStation === riverName ||
                    dbRiverName.includes(riverName);
+            
+            // デバッグログ
+            if (isFirstThree && matched) {
+              console.log(`🔍 Match found! CSV: "${riverName}" ⇔ DB: "${dbRiverName}"`);
+            }
+            
+            return matched;
           });
+          
+          if (isFirstThree) {
+            console.log(`🔍 CSV Row: riverName="${riverName}", matches=${matchingRivers.length}`);
+          }
           
           if (matchingRivers.length === 0) {
             skippedCount++;

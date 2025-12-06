@@ -1,19 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { SimpleDpfIdTest } from './components/SimpleDpfIdTest';
+import { ServerHealthCheck } from './components/ServerHealthCheck';
+import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
+import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
 import { WeatherTest } from './components/WeatherTest';
 import { DpfSyncAdmin } from './components/DpfSyncAdmin';
-import { DpfDataCheck } from './components/DpfDataCheck';
-import { DpfApiDebugger } from './components/DpfApiDebugger';
 import { ManualRiverAdmin } from './components/ManualRiverAdmin';
 import { BulkRiverUpload } from './components/BulkRiverUpload';
 import { DpfSearchTest } from './components/DpfSearchTest';
 import { DummyValueCleaner } from './components/DummyValueCleaner';
-import { SimpleDpfIdTest } from './components/SimpleDpfIdTest';
-import { ServerHealthCheck } from './components/ServerHealthCheck';
-import { DpfIdUpdater } from './components/DpfIdUpdater';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
@@ -93,7 +92,7 @@ function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   
-  // 都道府県セクションへの参照
+  // 都道府県セクショへの参照
   const prefecturesSectionRef = useRef<HTMLDivElement>(null);
 
   // URLパラメータからテストモードを確認
@@ -339,7 +338,34 @@ function App() {
               川の防災情報サイトのCSVファイルで既存データを更新します
             </p>
           </div>
-          <DpfIdUpdater />
+          <DirectDbUpdater />
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/'}
+            className="w-full"
+          >
+            メインページに戻る
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // 新しいURL: direct-db-update
+  if (testMode === 'direct-db-update') {
+    console.log('✅ Direct DB Update モードでレンダリング中 (v3.0)');
+    return (
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="mb-2" style={{ color: '#0372ac' }}>
+              DPF観測所ID 一括更新 v3.0
+            </h1>
+            <p className="text-slate-600">
+              フロントエンドから直接データベースに接続
+            </p>
+          </div>
+          <DirectDbUpdater />
           <Button
             variant="outline"
             onClick={() => window.location.href = '/'}

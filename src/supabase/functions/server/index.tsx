@@ -270,9 +270,30 @@ async function handler(req: Request): Promise<Response> {
         
         console.log(`📊 Received ${csvData.length} CSV rows for DPF ID update`);
         
-        // 既存の川データを全件取得
+        // 既存の川データを全件取得（1回だけ！）
         const allRiversData = await getAllRiversWithPagination();
         console.log(`📊 Found ${allRiversData.length} existing rivers in database`);
+        
+        // データベースアクセスを高速化するために、川名でインデックスを作成
+        const riversByName = new Map<string, any[]>();
+        for (const item of allRiversData) {
+          const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+          const dbRiverName = value.name || '';
+          
+          // カッコ内の観測所名を除去（例：「庄内川（枇杷島）」→「庄内川」）
+          const dbRiverNameWithoutStation = dbRiverName.replace(/[（(].*?[）)]/g, '').trim();
+          
+          // 3つのキーでマップに登録（完全一致、カッコなし、部分一致用）
+          if (!riversByName.has(dbRiverName)) riversByName.set(dbRiverName, []);
+          riversByName.get(dbRiverName)!.push(item);
+          
+          if (dbRiverNameWithoutStation !== dbRiverName) {
+            if (!riversByName.has(dbRiverNameWithoutStation)) riversByName.set(dbRiverNameWithoutStation, []);
+            riversByName.get(dbRiverNameWithoutStation)!.push(item);
+          }
+        }
+        
+        console.log(`📊 Created index with ${riversByName.size} unique river names`);
         
         let updatedCount = 0;
         let skippedCount = 0;
@@ -282,14 +303,10 @@ async function handler(req: Request): Promise<Response> {
         // デバッグ：最初の3件のCSVデータをログ出力
         console.log('📊 First 3 CSV rows:', csvData.slice(0, 3));
         
-        // デバッグ：最初の3件の既存データをログ出力
-        const first3Rivers = allRiversData.slice(0, 3).map(item => {
-          const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-          return { name: value.name, prefecture: value.prefecture };
-        });
-        console.log('📊 First 3 existing rivers:', first3Rivers);
+        // 更新対象をメモリに蓄積（DB接続を減らすため）
+        const updatesToPerform: Array<{ key: string; value: any; riverData: any }> = [];
         
-        // CSVデータでループ
+        // CSVデータでループ（インデックスを使って高速検索）
         for (const csvRow of csvData) {
           const riverName = csvRow.riverName;
           const municipalityCode = csvRow.municipalityCode;
@@ -301,29 +318,11 @@ async function handler(req: Request): Promise<Response> {
             continue;
           }
           
+          // インデックスから高速検索（O(1)）
+          const matchingRivers = riversByName.get(riverName) || [];
+          
           // デバッグ：最初の3件のマッチング詳細をログ出力
           const isFirstThree = (updatedCount + skippedCount) < 3;
-          
-          // 既存データから同じ川名のデータを検索
-          const matchingRivers = allRiversData.filter(item => {
-            const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-            const dbRiverName = value.name || '';
-            
-            // カッコ内の観測所名を除去して比較（例：「庄内川（枇杷島）」→「庄内川」）
-            const dbRiverNameWithoutStation = dbRiverName.replace(/[（(].*?[）)]/g, '').trim();
-            
-            const matched = dbRiverName === riverName || 
-                   dbRiverNameWithoutStation === riverName ||
-                   dbRiverName.includes(riverName);
-            
-            // デバッグログ
-            if (isFirstThree && matched) {
-              console.log(`🔍 Match found! CSV: "${riverName}" ⇔ DB: "${dbRiverName}"`);
-            }
-            
-            return matched;
-          });
-          
           if (isFirstThree) {
             console.log(`🔍 CSV Row: riverName="${riverName}", matches=${matchingRivers.length}`);
           }
@@ -333,7 +332,7 @@ async function handler(req: Request): Promise<Response> {
             continue;
           }
           
-          // マッチした川データを更新
+          // マッチした川データを更新準備
           for (const riverItem of matchingRivers) {
             const riverData = typeof riverItem.value === 'string' 
               ? JSON.parse(riverItem.value) 
@@ -345,28 +344,60 @@ async function handler(req: Request): Promise<Response> {
             riverData.stationName = stationName;
             riverData.waterLevelUrl = `https://www.river.go.jp/kawabou/ipSuiiKobetu.do?obsrvId=${municipalityCode}`;
             
-            // データベースを更新
-            const { error } = await supabase
-              .from('kv_store_5f24a873')
-              .update({ value: riverData })
-              .eq('key', riverItem.key);
+            // 更新リストに追加（まだDBには書き込まない）
+            updatesToPerform.push({
+              key: riverItem.key,
+              value: riverData,
+              riverData: riverData,
+            });
             
-            if (error) {
-              console.error(`❌ Failed to update ${riverItem.key}:`, error);
-            } else {
-              updatedCount++;
-              
-              // 最初の3件を例として保存
-              if (examples.length < 3) {
-                examples.push({
-                  riverName: riverData.name,
-                  prefecture: riverData.prefecture,
-                  municipalityCode: municipalityCode,
-                  basinName: basinName,
-                  stationName: stationName,
-                });
+            // 最初の3件を例として保存
+            if (examples.length < 3) {
+              examples.push({
+                riverName: riverData.name,
+                prefecture: riverData.prefecture,
+                municipalityCode: municipalityCode,
+                basinName: basinName,
+                stationName: stationName,
+              });
+            }
+          }
+        }
+        
+        console.log(`📦 Prepared ${updatesToPerform.length} updates, ${skippedCount} skipped`);
+        
+        // まとめてデータベース更新（20件ずつバッチ処理 - 高速化）
+        const DB_BATCH_SIZE = 20;
+        for (let i = 0; i < updatesToPerform.length; i += DB_BATCH_SIZE) {
+          const batch = updatesToPerform.slice(i, i + DB_BATCH_SIZE);
+          
+          // Promise.allで並列実行（20件まとめて）
+          const updatePromises = batch.map(({ key, value }) =>
+            supabase
+              .from('kv_store_5f24a873')
+              .update({ value })
+              .eq('key', key)
+          );
+          
+          try {
+            const results = await Promise.all(updatePromises);
+            
+            // エラーチェック
+            for (let j = 0; j < results.length; j++) {
+              const { error } = results[j];
+              if (error) {
+                console.error(`❌ Failed to update ${batch[j].key}:`, error);
+              } else {
+                updatedCount++;
               }
             }
+          } catch (error) {
+            console.error(`❌ Batch update error:`, error);
+          }
+          
+          // 進捗ログ（50件ごと）
+          if ((i + DB_BATCH_SIZE) % 50 === 0 || i + DB_BATCH_SIZE >= updatesToPerform.length) {
+            console.log(`⏳ Progress: ${Math.min(i + DB_BATCH_SIZE, updatesToPerform.length)}/${updatesToPerform.length} updates completed`);
           }
         }
         
@@ -422,7 +453,7 @@ async function handler(req: Request): Promise<Response> {
         
         console.log(`📊 Backup: Parsed ${rivers.length} rivers`);
         
-        // 最初の川データをサンプルとして出力（デバッグ用）
+        // 最初の川データをサンプルとして出力（デバグ用）
         if (rivers.length > 0) {
           console.log('📋 Sample river data:', JSON.stringify(rivers[0], null, 2));
           console.log('📋 Available fields:', Object.keys(rivers[0]));
@@ -455,7 +486,7 @@ async function handler(req: Request): Promise<Response> {
             const longitude = river.longitude || '';
             const scale = river.scale || '';
             
-            // ✅ DPF観測所IDの取得ロジック
+            // ✅ DPF観測IDの取得ロジック
             let dpfObservationId = '';
             if (river.dpfObservationId) {
               // 新しいフィールド名がある場合

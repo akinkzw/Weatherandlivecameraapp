@@ -230,7 +230,7 @@ function App() {
     'kansai': ['滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
     'chugoku': ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
     'shikoku': ['徳島県', '香川県', '愛媛県', '高知県'],
-    'kyushu-okinawa': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+    'kyushu-okinawa': ['福岡県', '佐賀県', '長崎県', '熊��県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
   };
 
   const handleAreaClick = (area: string) => {
@@ -424,7 +424,7 @@ function App() {
               データ管理
             </h1>
             <p className="text-slate-600">
-              既存の川データのダミー値をクリアします
+              既存の川データのダミー値を��リアします
             </p>
           </div>
           <DummyValueCleaner />
@@ -742,6 +742,7 @@ function App() {
       )}
       
       {/* Server Health Check Button - 常に表示（一時的） */}
+      {/* デバッグボタンは本番では非表示
       <Button
         variant="outline"
         className="fixed bottom-24 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
@@ -750,8 +751,10 @@ function App() {
       >
         🔍 サーバー診断
       </Button>
+      */}
       
       {/* Database Debug Button - デバッグ用 */}
+      {/* デバッグボタンは本番では非表示
       <Button
         variant="outline"
         className="fixed bottom-44 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
@@ -803,8 +806,10 @@ function App() {
       >
         🐛 DB構造確認
       </Button>
+      */}
       
       {/* DPF検索ボタン - デバッグ用 */}
+      {/* デバッグボタンは本番では非表示
       <Button
         variant="outline"
         className="fixed bottom-64 left-6 shadow-lg hover:shadow-xl transition-all z-50 text-xs"
@@ -912,6 +917,7 @@ function App() {
       >
         🔍 川検索
       </Button>
+      */}
     </div>
   );
 }

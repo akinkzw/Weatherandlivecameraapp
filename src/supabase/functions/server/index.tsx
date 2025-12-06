@@ -586,13 +586,39 @@ async function handler(req: Request): Promise<Response> {
       return jsonResponse({ success: true, message: 'River deleted' });
     }
 
-    // リアルタイム水位
-    const waterLevelMatch = path.match(/^\/make-server-5f24a873\/(realtime-)?water-level\/(.+)$/);
-    if (waterLevelMatch && method === 'GET') {
-      const stationId = waterLevelMatch[2];
-      const observatory = url.searchParams.get('observatory') || undefined;
-      const waterLevelData = await fetchRealtimeWaterLevel(stationId, observatory);
-      return jsonResponse({ success: true, data: waterLevelData });
+    // リアルタイム水位取得
+    if (path.startsWith('/make-server-5f24a873/realtime-water-level/') && method === 'GET') {
+      const pathParts = path.split('/');
+      const townCode = pathParts[pathParts.length - 1];
+      
+      if (!townCode) {
+        return jsonResponse({ success: false, error: 'Town code is required' }, 400);
+      }
+      
+      // オプション: 観測所名でフィルタリング
+      const observatoryName = url.searchParams.get('observatory');
+      
+      console.log(`🌊 Fetching realtime water level for town code: ${townCode}`);
+      if (observatoryName) {
+        console.log(`   Filter by observatory: ${observatoryName}`);
+      }
+      
+      const result = await fetchRealtimeWaterLevel(townCode, observatoryName || undefined);
+      
+      if (result.success) {
+        return jsonResponse({ 
+          success: true, 
+          data: result.data,
+          apiUrl: result.apiUrl,
+          timestamp: result.timestamp
+        });
+      } else {
+        return jsonResponse({ 
+          success: false, 
+          error: result.error || 'Failed to fetch water level data',
+          apiUrl: result.apiUrl
+        }, 404);
+      }
     }
 
     // 天気予報

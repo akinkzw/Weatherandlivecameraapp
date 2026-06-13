@@ -1935,4 +1935,37 @@ console.log('  - POST /make-server-5f24a873/rivers/bulk');
 console.log('  - POST /make-server-5f24a873/rivers/update-dpf-ids');
 console.log('✅ Server is ready to accept requests');
 
-Deno.serve(handler);
+// CORS許可オリジン。本番(Netlify) + Netlifyのデプロイプレビュー/ブランチ + ローカル開発。
+// カスタムドメインを追加する場合は、このリストに正規表現を1行足す。
+const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
+  /^https:\/\/([a-z0-9-]+--)?weather-for-anglers\.netlify\.app$/,
+  /^http:\/\/localhost(:\d+)?$/,
+  /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+];
+
+function isAllowedOrigin(origin: string): boolean {
+  return origin !== '' && ALLOWED_ORIGIN_PATTERNS.some((re) => re.test(origin));
+}
+
+// 全レスポンスの出口で Access-Control-Allow-Origin を許可リストに基づき上書きする。
+// 許可オリジンならそのオリジンを反映し、それ以外はヘッダーを付けない（ブラウザがブロック）。
+function withCors(inner: (req: Request) => Promise<Response>) {
+  return async (req: Request): Promise<Response> => {
+    const res = await inner(req);
+    const origin = req.headers.get('Origin') ?? '';
+    const headers = new Headers(res.headers);
+    if (isAllowedOrigin(origin)) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      headers.set('Vary', 'Origin');
+    } else {
+      headers.delete('Access-Control-Allow-Origin');
+    }
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers,
+    });
+  };
+}
+
+Deno.serve(withCors(handler));

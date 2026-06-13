@@ -22,6 +22,9 @@ build/
 .vscode/
 .idea/
 
+# Supabase CLI
+supabase/.temp/
+
 # Logs
 *.log
 npm-debug.log*

@@ -126,103 +126,56 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'IBM Plex Sans JP', sans-serif;
   }
 
-  .font-mincho {
-    font-family: 'Sawarabi Mincho', serif;
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
   }
-}
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
-@layer base {
-  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
-    h1 {
-      font-size: var(--text-2xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h2 {
-      font-size: var(--text-xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h3 {
-      font-size: var(--text-lg);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h4 {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    p {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
-
-    label {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    button {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    input {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
   }
-}
 
-html {
-  font-size: var(--font-size);
-}
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
 
-/* 地方ボタンのレイヤースタイル */
-.region-button {
-  /* メインボタン */
-  font-family: 'Noto Sans JP', sans-serif !important;
-  background: white !important;
-  color: #333 !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 0 !important;
-  position: relative;
-  padding: 16px;
-  transition: all 0.2s ease;
-  /* 6pxのドロップシャドウ（45度の角度） */
-  box-shadow: 6px 6px 0px 0px #0372ac;
-}
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
 
-/* ホバー時：ボタンが動く */
-.region-button:hover {
-  transform: translate(3px, 3px) !important;
-  box-shadow: 3px 3px 0px 0px #0372ac;
-}
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
 
-/* 選択時：背景が薄い青に */
-.region-button.selected {
-  background: #e8f4f8 !important;
-  border-color: #0372ac !important;
-  color: #0372ac !important;
-  box-shadow: 6px 6px 0px 0px #025a87;
-}
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
 
-.region-button.selected:hover {
-  transform: translate(3px, 3px) !important;
-  box-shadow: 3px 3px 0px 0px #025a87;
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
 }

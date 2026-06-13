@@ -4,7 +4,7 @@ import { ServerHealthCheck } from './components/ServerHealthCheck';
 import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
-import { getRecentRivers, addRecentRiver, type RecentRiver } from './utils/recentRivers';
+import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
@@ -919,6 +919,7 @@ function App() {
             }));
           }}
           recentRivers={recentRivers}
+          onClearRecent={() => setRecentRivers(clearRecentRivers())}
           onSelectPrefecture={(prefecture) => {
             // ドロップダウンで県を選んだら、地方/地域フィルタはクリアして県単独で絞り込む
             setSelectedArea('all');

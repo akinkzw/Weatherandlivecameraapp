@@ -18,6 +18,7 @@ interface RiverListProps {
   selectedRiverId?: string;
   rivers: River[];
   recentRivers: RecentRiver[];
+  onClearRecent: () => void;
   isLoadingRivers: boolean;
 }
 
@@ -91,6 +92,7 @@ export function RiverList({
   selectedRiverId,
   rivers,
   recentRivers,
+  onClearRecent,
   isLoadingRivers
 }: RiverListProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -219,9 +221,20 @@ export function RiverList({
       <div className="space-y-4">
         {recentRivers.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 px-1 mb-2">
-              <History className="w-4 h-4" style={{ color: '#0372ac' }} />
-              <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>最近見た川</h3>
+            <div className="flex items-center justify-between gap-2 px-1 mb-2">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4" style={{ color: '#0372ac' }} />
+                <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>最近見た川</h3>
+              </div>
+              <button
+                type="button"
+                onClick={onClearRecent}
+                className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                aria-label="最近見た川の履歴を消去"
+              >
+                履歴を消去
+              </button>
             </div>
             <div className="space-y-2">
               {recentRivers.map((rr) => (

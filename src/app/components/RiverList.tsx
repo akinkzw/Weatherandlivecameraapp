@@ -93,10 +93,13 @@ export function RiverList({
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   // データに存在する都道府県を北→南順＋件数付きで列挙（ドロップダウン用）
+  // ※ 正規の47都道府県に一致するものだけを採用し、文字化けデータ（「三��県」等）は除外する
   const allPrefectures = useMemo(() => {
     const counts = new Map<string, number>();
     for (const r of rivers) {
-      if (r.prefecture) counts.set(r.prefecture, (counts.get(r.prefecture) || 0) + 1);
+      if (r.prefecture && prefectureRank(r.prefecture) < PREFECTURE_ORDER.length) {
+        counts.set(r.prefecture, (counts.get(r.prefecture) || 0) + 1);
+      }
     }
     return Array.from(counts.entries())
       .sort((a, b) => prefectureRank(a[0]) - prefectureRank(b[0]) || a[0].localeCompare(b[0], 'ja'))

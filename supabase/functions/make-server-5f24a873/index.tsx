@@ -195,6 +195,7 @@ async function getAllRiversWithPagination() {
             .from("kv_store_5f24a873")
             .select("key, value")
             .like("key", "river:%")
+            .order("key", { ascending: true }) // 安定した並び順。これが無いとページ間で行を取りこぼす
             .range(offset, offset + BATCH_SIZE - 1);
           
           if (result.error) {

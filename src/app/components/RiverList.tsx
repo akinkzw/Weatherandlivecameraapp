@@ -175,8 +175,8 @@ export function RiverList({
     );
   }
 
-  // 都道府県順（北→南）＋川名で並べ替え
-  const sortedRivers = sortRivers(isSearching ? filteredRivers : rivers);
+  // 都道府県順（北→南）＋川名で並べ替え（未選択時は一覧を出さないのでソート不要）
+  const sortedRivers = isSearching ? sortRivers(filteredRivers) : [];
   const visibleRivers = sortedRivers.slice(0, visibleCount);
   const hasMore = visibleCount < sortedRivers.length;
   const remainingCount = sortedRivers.length - visibleCount;
@@ -204,6 +204,47 @@ export function RiverList({
     );
   }
 
+  // 未選択時は一覧を出さず、地域選択・検索へ誘導するガイドを表示
+  if (!isSearching) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-12 text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: '#e8f4f8' }}>
+          <MapPin className="w-7 h-7" style={{ color: '#0372ac' }} />
+        </div>
+        <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-2" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+          地域を選んで川を探す
+        </h3>
+        <p className="text-sm text-slate-500 mb-6 leading-relaxed" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+          上の「地方から探す」で地域を選ぶか、<br className="hidden sm:block" />
+          川名で検索すると一覧が表示されます。
+        </p>
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs font-medium text-slate-400" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>都道府県から探す</span>
+          <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
+            <SelectTrigger
+              aria-label="都道府県で絞り込む"
+              className="h-11 w-[240px] rounded-full bg-slate-50 border border-slate-200 text-sm text-slate-700 gap-1.5 focus:ring-2 focus:ring-[#0372ac]/30 justify-center"
+              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+            >
+              <MapPin className="w-4 h-4" style={{ color: '#0372ac' }} />
+              <SelectValue placeholder="都道府県を選択" />
+            </SelectTrigger>
+            <SelectContent className="max-h-80">
+              {allPrefectures.map(({ prefecture, count }) => (
+                <SelectItem key={prefecture} value={prefecture}>
+                  {prefecture}（{count}）
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="mt-6 text-xs text-slate-400" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+          全国 <span className="font-bold" style={{ color: '#0372ac' }}>{rivers.length}</span> 件の川を収録
+        </p>
+      </div>
+    );
+  }
+
   let lastPrefecture: string | null = null;
 
   return (
@@ -212,11 +253,7 @@ export function RiverList({
       <div className="flex flex-wrap items-center justify-between gap-2 py-2 px-1">
         <p className="flex items-center gap-2 text-slate-600 text-sm font-medium" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
           <Waves className="w-4 h-4" style={{ color: '#0372ac' }} />
-          {isSearching ? (
-            <span><span style={{ color: '#0372ac' }} className="font-bold">{filteredRivers.length}</span> 件の川が見つかりました</span>
-          ) : (
-            <span>地方を選択して絞り込めます（全 <span style={{ color: '#0372ac' }} className="font-bold">{rivers.length}</span> 件）</span>
-          )}
+          <span><span style={{ color: '#0372ac' }} className="font-bold">{filteredRivers.length}</span> 件の川が見つかりました</span>
         </p>
         <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
           <SelectTrigger

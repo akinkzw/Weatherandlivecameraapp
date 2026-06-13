@@ -119,29 +119,6 @@ function App() {
     console.log('Test mode:', testMode);
   }
 
-  // グローバル関数として環境変数チェック機能を追加（デバッグ用）
-  useEffect(() => {
-    (window as any).checkEnv = async () => {
-      try {
-        console.log('=== 環境変数チェック開始 ===');
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/env-check`, {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        });
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('環境変数チェック結果:', data);
-        console.table(data.variables);
-        return data;
-      } catch (error) {
-        console.error('環境変数チェックエラー:', error);
-        return { error: String(error) };
-      }
-    };
-    console.log('💡 デバッグ用: コンソールで checkEnv() を実行して環境変数を確認できます');
-  }, []);
-
   // 川のデータを取得
   useEffect(() => {
     // テストモードや管理ページの場合はデータ取得をスキップ

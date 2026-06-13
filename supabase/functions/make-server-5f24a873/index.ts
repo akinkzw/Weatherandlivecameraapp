@@ -39,6 +39,83 @@ let globalRiversCacheTimestamp: number | null = null;
 let globalRiversIndexCache: Map<string, Array<{ key: string; value: any }>> | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5分間キャッシュを保持
 
+// 🚀 河川一覧スナップショット（1キーにまとめてDB全件スキャンを回避）
+// /rivers は毎回 river:* を全件スキャンしていたため約10秒かかっていた。
+// 重複除外済みの一覧を1行に保存し、点読み取りで高速応答する。
+const RIVERS_SNAPSHOT_KEY = 'cache:rivers:snapshot:v1';
+const RIVERS_SNAPSHOT_TTL = 30 * 60 * 1000; // 30分（データ更新時は invalidateRiversSnapshot で即時無効化）
+
+// 川名+都道府県でユニーク化（IDが小さい方を優先）
+function dedupeRivers(rivers: any[]): any[] {
+  const uniqueMap = new Map<string, any>();
+  for (const river of rivers) {
+    const key = `${river.name}|${river.prefecture}`;
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, river);
+    } else {
+      const existing = uniqueMap.get(key)!;
+      if (parseInt(river.id) < parseInt(existing.id)) {
+        uniqueMap.set(key, river);
+      }
+    }
+  }
+  return Array.from(uniqueMap.values());
+}
+
+// スナップショットを優先取得。無効/期限切れなら全件スキャンして再構築・保存する。
+async function getRiversSnapshot(): Promise<any[]> {
+  const supabase = getSupabaseClient();
+
+  // 1) スナップショット（1キー）を高速取得
+  try {
+    const { data, error } = await supabase
+      .from('kv_store_5f24a873')
+      .select('value')
+      .eq('key', RIVERS_SNAPSHOT_KEY)
+      .maybeSingle();
+    if (!error && data?.value) {
+      const snap = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      if (snap?.timestamp && Array.isArray(snap.rivers) && (Date.now() - snap.timestamp < RIVERS_SNAPSHOT_TTL)) {
+        console.log(`⚡ Using river snapshot (${snap.rivers.length} rivers)`);
+        return snap.rivers;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Snapshot read failed, rebuilding:', e instanceof Error ? e.message : String(e));
+  }
+
+  // 2) 全件スキャンして再構築
+  const { rivers: allRiversData } = await getAllRiversWithIndex();
+  const rivers = allRiversData.map((item) => {
+    const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+    return { ...value, _key: item.key };
+  });
+  const uniqueRivers = dedupeRivers(rivers);
+
+  // 3) スナップショット保存（失敗しても応答は継続）
+  try {
+    await supabase.from('kv_store_5f24a873').upsert({
+      key: RIVERS_SNAPSHOT_KEY,
+      value: { timestamp: Date.now(), rivers: uniqueRivers },
+    });
+    console.log(`💾 River snapshot saved (${uniqueRivers.length} rivers)`);
+  } catch (e) {
+    console.warn('⚠️ Snapshot save failed:', e instanceof Error ? e.message : String(e));
+  }
+  return uniqueRivers;
+}
+
+// データ更新時にスナップショットを無効化（次回 /rivers で再構築）
+async function invalidateRiversSnapshot(): Promise<void> {
+  try {
+    const supabase = getSupabaseClient();
+    await supabase.from('kv_store_5f24a873').delete().eq('key', RIVERS_SNAPSHOT_KEY);
+    console.log('🧹 River snapshot invalidated');
+  } catch (e) {
+    console.warn('⚠️ Snapshot invalidation failed:', e instanceof Error ? e.message : String(e));
+  }
+}
+
 // キャッシュ付き全件取得（インデックス付き）
 async function getAllRiversWithIndex(): Promise<{
   rivers: Array<{ key: string; value: any }>;
@@ -194,10 +271,10 @@ const corsHeaders = {
 };
 
 // JSONレスポンス作成
-function jsonResponse(data: any, status = 200) {
+function jsonResponse(data: any, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', ...extraHeaders },
   });
 }
 
@@ -447,49 +524,17 @@ async function handler(req: Request): Promise<Response> {
     if (path === '/make-server-5f24a873/rivers' && method === 'GET') {
       try {
         const prefecture = url.searchParams.get('prefecture');
-        const { rivers: allRiversData } = await getAllRiversWithIndex();
-        
-        const rivers = allRiversData.map(item => {
-          const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-          return { ...value, _key: item.key };
-        });
-        
-        // 🔍 デバッグ：笛吹川のデータを確認
-        const fuefukiRivers = rivers.filter(r => r.name && r.name.includes('笛吹川'));
-        if (fuefukiRivers.length > 0) {
-          console.log('🔍 DEBUG: 笛吹川データをサーバーから送信:', {
-            count: fuefukiRivers.length,
-            sample: fuefukiRivers[0],
-            hasWaterLevelUrl: !!fuefukiRivers[0].waterLevelUrl,
-            waterLevelUrl: fuefukiRivers[0].waterLevelUrl
-          });
-        }
-        
-        // サーバー側で重複除外（川名 + 都道府県でユニーク化、IDが小さい方を優先）
-        const uniqueMap = new Map<string, any>();
-        for (const river of rivers) {
-          const key = `${river.name}|${river.prefecture}`;
-          if (!uniqueMap.has(key)) {
-            uniqueMap.set(key, river);
-          } else {
-            const existing = uniqueMap.get(key)!;
-            if (parseInt(river.id) < parseInt(existing.id)) {
-              uniqueMap.set(key, river);
-            }
-          }
-        }
-        const uniqueRivers = Array.from(uniqueMap.values());
-        const duplicateCount = rivers.length - uniqueRivers.length;
-        if (duplicateCount > 0) {
-          console.log(`🧹 重複除外: ${rivers.length}件 → ${uniqueRivers.length}件 (${duplicateCount}件除外)`);
-        }
+        // スナップショット（1キー）から高速取得。全件スキャンを回避。
+        const uniqueRivers = await getRiversSnapshot();
+        // ブラウザ側で数分キャッシュし、リロード時の待ち時間をなくす。
+        const CACHE_HEADERS = { 'Cache-Control': 'public, max-age=300' };
 
         if (prefecture && prefecture !== "すべて") {
           const filtered = uniqueRivers.filter(r => r.prefecture === prefecture);
-          return jsonResponse({ success: true, rivers: filtered, count: filtered.length });
+          return jsonResponse({ success: true, rivers: filtered, count: filtered.length }, 200, CACHE_HEADERS);
         }
 
-        return jsonResponse({ success: true, rivers: uniqueRivers, count: uniqueRivers.length });
+        return jsonResponse({ success: true, rivers: uniqueRivers, count: uniqueRivers.length }, 200, CACHE_HEADERS);
       } catch (error) {
         console.error('❌ Error in /rivers endpoint:', error);
         return jsonResponse({ 
@@ -1431,7 +1476,8 @@ async function handler(req: Request): Promise<Response> {
           }
         }
         
-        // キャッシュをクリア
+        // キャッシュをクリア（メモリ＋DBスナップショット）
+        await invalidateRiversSnapshot();
         globalRiversCache = null;
         globalRiversIndexCache = null;
         globalRiversCacheTimestamp = null;
@@ -1509,7 +1555,7 @@ async function handler(req: Request): Promise<Response> {
       // microCMSはリスト形式でデータを返すので、最初のcontentを取得
       const bannerData = data.contents && data.contents.length > 0 ? data.contents[0] : data;
       
-      return jsonResponse({ success: true, data: bannerData });
+      return jsonResponse({ success: true, data: bannerData }, 200, { 'Cache-Control': 'public, max-age=300' });
     }
 
     // ダミー水位データをクリアするエンドポイント（SQL一括更新版）
@@ -1658,7 +1704,8 @@ async function handler(req: Request): Promise<Response> {
           console.log(`  Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${results.filter(r => r).length}/${batchKeys.length} updated`);
         }
         
-        // キャッシュをクリア
+        // キャッシュをクリア（メモリ＋DBスナップショット）
+        await invalidateRiversSnapshot();
         globalRiversCache = null;
         globalRiversCacheTimestamp = null;
         globalRiversIndexCache = null;
@@ -1791,7 +1838,8 @@ async function handler(req: Request): Promise<Response> {
           console.warn(`⚠️ ${errors.length} errors occurred during processing`);
         }
         
-        // キャッシュをクリア
+        // キャッシュをクリア（メモリ＋DBスナップショット）
+        await invalidateRiversSnapshot();
         globalRiversCache = null;
         globalRiversCacheTimestamp = null;
         globalRiversIndexCache = null;

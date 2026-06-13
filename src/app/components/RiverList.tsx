@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, ArrowDownAZ } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves } from 'lucide-react';
 import { River } from '../App';
 
 interface RiverListProps {
@@ -12,6 +13,7 @@ interface RiverListProps {
   selectedPrefecture: string;
   areaToRegionMap: { [key: string]: string[] };
   onSelectRiver: (river: River) => void;
+  onSelectPrefecture: (prefecture: string) => void;
   selectedRiverId?: string;
   rivers: River[];
   isLoadingRivers: boolean;
@@ -83,11 +85,23 @@ export function RiverList({
   selectedPrefecture,
   areaToRegionMap,
   onSelectRiver,
+  onSelectPrefecture,
   selectedRiverId,
   rivers,
   isLoadingRivers
 }: RiverListProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // データに存在する都道府県を北→南順＋件数付きで列挙（ドロップダウン用）
+  const allPrefectures = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rivers) {
+      if (r.prefecture) counts.set(r.prefecture, (counts.get(r.prefecture) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => prefectureRank(a[0]) - prefectureRank(b[0]) || a[0].localeCompare(b[0], 'ja'))
+      .map(([prefecture, count]) => ({ prefecture, count }));
+  }, [rivers]);
 
   const filteredRivers = useMemo(() => {
     return rivers.filter(river => {
@@ -201,10 +215,24 @@ export function RiverList({
             <span>地方を選択して絞り込めます（全 <span style={{ color: '#0372ac' }} className="font-bold">{rivers.length}</span> 件）</span>
           )}
         </p>
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-1">
-          <ArrowDownAZ className="w-3.5 h-3.5" />
-          都道府県順（北→南）
-        </span>
+        <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
+          <SelectTrigger
+            aria-label="都道府県で絞り込む"
+            className="h-9 w-auto min-w-[180px] rounded-full bg-slate-100 border-0 text-sm text-slate-700 gap-1.5 focus:ring-2 focus:ring-[#0372ac]/30"
+            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+          >
+            <MapPin className="w-4 h-4" style={{ color: '#0372ac' }} />
+            <SelectValue placeholder="都道府県で絞り込む" />
+          </SelectTrigger>
+          <SelectContent className="max-h-80">
+            <SelectItem value="all">すべての都道府県</SelectItem>
+            {allPrefectures.map(({ prefecture, count }) => (
+              <SelectItem key={prefecture} value={prefecture}>
+                {prefecture}（{count}）
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* River cards（都道府県見出し付き） */}

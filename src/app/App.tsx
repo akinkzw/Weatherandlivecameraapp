@@ -904,6 +904,12 @@ function App() {
             setSelectedRiver(river);
             setIsDialogOpen(true);
           }}
+          onSelectPrefecture={(prefecture) => {
+            // ドロップダウンで県を選んだら、地方/地域フィルタはクリアして県単独で絞り込む
+            setSelectedArea('all');
+            setSelectedRegion('all');
+            setSelectedPrefecture(prefecture);
+          }}
           selectedRiverId={selectedRiver?.id}
           rivers={rivers}
           isLoadingRivers={isLoadingRivers}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -59,6 +59,18 @@ function sortRivers(list: River[]): River[] {
     if (ra !== rb) return ra - rb;
     return (a.name || '').localeCompare(b.name || '', 'ja');
   });
+}
+
+// アイコンを淡い青の角丸チップに収め、視認性とモダンな印象を両立する最小限の装飾。
+function IconChip({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="flex h-6 w-6 items-center justify-center rounded-md shrink-0"
+      style={{ backgroundColor: '#e8f4f8' }}
+    >
+      {children}
+    </span>
+  );
 }
 
 function RiverCardSkeleton() {
@@ -223,7 +235,7 @@ export function RiverList({
           <div>
             <div className="flex items-center justify-between gap-2 px-1 mb-2">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4" style={{ color: '#0372ac' }} />
+                <IconChip><History className="size-4" style={{ color: '#0372ac' }} /></IconChip>
                 <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>最近見た川</h3>
               </div>
               <button
@@ -292,10 +304,10 @@ export function RiverList({
           <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
             <SelectTrigger
               aria-label="都道府県で絞り込む"
-              className="h-11 w-[240px] rounded-full bg-slate-50 border border-slate-200 text-sm text-slate-700 gap-1.5 focus:ring-2 focus:ring-[#0372ac]/30 justify-center"
+              className="h-12 w-[260px] rounded-xl bg-white border border-slate-200 shadow-sm pl-2.5 pr-3 text-sm text-slate-700 gap-2.5 hover:border-[#0372ac]/40 focus:ring-2 focus:ring-[#0372ac]/30 transition-colors"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              <MapPin className="w-4 h-4" style={{ color: '#0372ac' }} />
+              <IconChip><MapPin className="size-4" style={{ color: '#0372ac' }} /></IconChip>
               <SelectValue placeholder="都道府県を選択" />
             </SelectTrigger>
             <SelectContent className="max-h-80">
@@ -328,10 +340,10 @@ export function RiverList({
         <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
           <SelectTrigger
             aria-label="都道府県で絞り込む"
-            className="h-9 w-auto min-w-[180px] rounded-full bg-slate-100 border-0 text-sm text-slate-700 gap-1.5 focus:ring-2 focus:ring-[#0372ac]/30"
+            className="h-10 w-auto min-w-[190px] rounded-full bg-white border border-slate-200 shadow-sm pl-1.5 pr-3 text-sm text-slate-700 gap-2 hover:border-[#0372ac]/40 focus:ring-2 focus:ring-[#0372ac]/30 transition-colors"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           >
-            <MapPin className="w-4 h-4" style={{ color: '#0372ac' }} />
+            <IconChip><MapPin className="size-4" style={{ color: '#0372ac' }} /></IconChip>
             <SelectValue placeholder="都道府県で絞り込む" />
           </SelectTrigger>
           <SelectContent className="max-h-80">

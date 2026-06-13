@@ -733,22 +733,27 @@ function App() {
       {/* Japan Map Section */}
       <div className="bg-white border-b border-slate-200 py-8">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            {bannerData?.icon?.url && (
-              <ImageWithFallback
-                src={bannerData.icon.url}
-                alt="装飾アイコン"
-                className="w-8 h-8 object-contain"
-              />
-            )}
-            <h2 className="font-bold" style={{ fontFamily: 'Noto Sans JP, sans-serif', color: '#0372ac' }}>地方から探す</h2>
-            {bannerData?.icon?.url && (
-              <ImageWithFallback
-                src={bannerData.icon.url}
-                alt="装飾アイコン"
-                className="w-8 h-8 object-contain"
-              />
-            )}
+          <div className="text-center mb-7">
+            <div className="flex items-center justify-center gap-3">
+              {bannerData?.icon?.url && (
+                <ImageWithFallback
+                  src={bannerData.icon.url}
+                  alt="装飾アイコン"
+                  className="w-8 h-8 object-contain"
+                />
+              )}
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ fontFamily: 'Noto Sans JP, sans-serif', color: '#0372ac' }}>地方から探す</h2>
+              {bannerData?.icon?.url && (
+                <ImageWithFallback
+                  src={bannerData.icon.url}
+                  alt="装飾アイコン"
+                  className="w-8 h-8 object-contain"
+                />
+              )}
+            </div>
+            <p className="mt-2 text-sm text-slate-500" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+              地域を選ぶと、その都道府県の川を一覧できます
+            </p>
           </div>
           
           <div className="max-w-4xl mx-auto">
@@ -855,8 +860,8 @@ function App() {
                   <Button
                     variant={selectedPrefecture === 'all' ? 'default' : 'outline'}
                     onClick={() => setSelectedPrefecture('all')}
-                    className="h-11 py-3 text-sm font-semibold transition-all"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === 'all' ? '' : '#204670', borderColor: '#204670' }}
+                    className="h-10 px-4 rounded-full text-sm font-medium transition-all"
+                    style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === 'all' ? '' : '#0372ac', borderColor: selectedPrefecture === 'all' ? '' : '#cfe8f5' }}
                   >
                     すべて
                   </Button>
@@ -878,8 +883,8 @@ function App() {
                         key={pref}
                         variant={selectedPrefecture === pref ? 'default' : 'outline'}
                         onClick={() => setSelectedPrefecture(pref)}
-                        className="h-11 py-3 text-sm font-semibold transition-all"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === pref ? '' : '#204670', borderColor: '#204670' }}
+                        className="h-10 px-4 rounded-full text-sm font-medium transition-all"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === pref ? '' : '#0372ac', borderColor: selectedPrefecture === pref ? '' : '#cfe8f5' }}
                       >
                         {displayName}
                       </Button>
@@ -893,7 +898,7 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-8">
         <RiverList
           selectedRegion={selectedRegion}
           searchQuery={searchQuery}

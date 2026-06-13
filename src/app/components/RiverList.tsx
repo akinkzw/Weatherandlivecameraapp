@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, Waves } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves } from 'lucide-react';
 import { River } from '../App';
 
 interface RiverListProps {
@@ -170,10 +170,17 @@ export function RiverList({
             role="listitem"
             tabIndex={0}
             aria-label={`${river.name} - ${river.prefecture} - ${river.currentStatus === 'warning' ? '警戒' : river.currentStatus === 'caution' ? '注意' : '正常'}`}
-            className={`p-4 cursor-pointer transition-all duration-150 hover:shadow-md active:scale-[0.99] ${
-              selectedRiverId === river.id ? 'ring-2 shadow-md' : 'hover:bg-slate-50'
+            className={`p-4 cursor-pointer transition-all duration-150 border-l-4 hover:shadow-md active:scale-[0.99] active:shadow-none ${
+              river.currentStatus === 'warning'
+                ? 'border-l-red-500'
+                : river.currentStatus === 'caution'
+                ? 'border-l-amber-500'
+                : 'border-l-green-500'
+            } ${
+              selectedRiverId === river.id
+                ? 'bg-blue-50 shadow-md ring-1 ring-[#0372ac]/30'
+                : 'hover:bg-slate-50'
             }`}
-            style={selectedRiverId === river.id ? { ringColor: '#0372ac', backgroundColor: '#f0f9ff' } : {}}
             onClick={() => onSelectRiver(river)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -182,7 +189,7 @@ export function RiverList({
               }
             }}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   {getStatusIcon(river.currentStatus)}
@@ -201,8 +208,9 @@ export function RiverList({
                   )}
                 </div>
               </div>
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 flex items-center gap-2">
                 {getStatusBadge(river.currentStatus)}
+                <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
               </div>
             </div>
           </Card>
@@ -226,9 +234,8 @@ export function RiverList({
       {hasMore && (
         <div className="pt-2 pb-4">
           <Button
-            variant="outline"
-            className="w-full h-12 text-sm font-medium"
-            style={{ color: '#0372ac', borderColor: '#0372ac' }}
+            variant="default"
+            className="w-full h-12 text-sm font-semibold shadow-sm"
             onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
           >
             <ChevronDown className="w-4 h-4 mr-2" />

@@ -212,6 +212,23 @@ async function handler(req: Request): Promise<Response> {
   const path = url.pathname;
   const method = req.method;
 
+  // デバッグ/テスト用エンドポイントは本番では無効。
+  // ENABLE_DEBUG_ENDPOINTS='true' を設定した環境でのみ利用可能。
+  const DEBUG_PATHS = new Set([
+    '/make-server-5f24a873/env-check',
+    '/make-server-5f24a873/test-weatherapi',
+    '/make-server-5f24a873/test-dpf',
+    '/make-server-5f24a873/rivers/debug-structure',
+    '/make-server-5f24a873/dpf/debug-metadata',
+    '/make-server-5f24a873/debug/find-fuefuki',
+    '/make-server-5f24a873/debug/fuefuki-inspect',
+    '/make-server-5f24a873/debug/fuefuki-update',
+    '/make-server-5f24a873/inspect-water-levels',
+  ]);
+  if (DEBUG_PATHS.has(path) && Deno.env.get('ENABLE_DEBUG_ENDPOINTS') !== 'true') {
+    return jsonResponse({ error: 'Not found' }, 404);
+  }
+
   try {
     // Health check
     if (path === '/make-server-5f24a873/health' && method === 'GET') {
@@ -228,7 +245,6 @@ async function handler(req: Request): Promise<Response> {
         variables: {
           OPENWEATHER_API_KEY: Deno.env.get('OPENWEATHER_API_KEY') ? 'SET' : 'NOT SET',
           WEATHERAPI_KEY: weatherApiKey ? `SET (length: ${weatherApiKey.length})` : 'NOT SET',
-          WEATHERAPI_KEY_VALUE: weatherApiKey || 'NOT SET',
           DPF_API_KEY: dpfApiKey ? 'SET' : 'NOT SET',
           MICROCMS_API_KEY: Deno.env.get('MICROCMS_API_KEY') ? 'SET' : 'NOT SET',
           SUPABASE_URL: Deno.env.get('SUPABASE_URL') ? 'SET' : 'NOT SET',

@@ -878,8 +878,8 @@ function App() {
                   <Button
                     variant={selectedPrefecture === 'all' ? 'default' : 'outline'}
                     onClick={() => setSelectedPrefecture('all')}
-                    className="h-auto py-3"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === 'all' ? '' : '#204670' }}
+                    className="h-11 py-3 text-sm font-semibold transition-all"
+                    style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === 'all' ? '' : '#204670', borderColor: '#204670' }}
                   >
                     すべて
                   </Button>
@@ -895,14 +895,14 @@ function App() {
                     } else {
                       displayName = pref.replace('県', '');
                     }
-                    
+
                     return (
                       <Button
                         key={pref}
                         variant={selectedPrefecture === pref ? 'default' : 'outline'}
                         onClick={() => setSelectedPrefecture(pref)}
-                        className="h-auto py-3"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === pref ? '' : '#204670' }}
+                        className="h-11 py-3 text-sm font-semibold transition-all"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif', color: selectedPrefecture === pref ? '' : '#204670', borderColor: '#204670' }}
                       >
                         {displayName}
                       </Button>

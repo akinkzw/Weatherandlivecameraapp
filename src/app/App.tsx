@@ -4,6 +4,7 @@ import { ServerHealthCheck } from './components/ServerHealthCheck';
 import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
+import { getRecentRivers, addRecentRiver, type RecentRiver } from './utils/recentRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
@@ -103,6 +104,7 @@ function App() {
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [rivers, setRivers] = useState<River[]>([])
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
+  const [recentRivers, setRecentRivers] = useState<RecentRiver[]>(() => getRecentRivers());
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -908,7 +910,15 @@ function App() {
           onSelectRiver={(river) => {
             setSelectedRiver(river);
             setIsDialogOpen(true);
+            setRecentRivers(addRecentRiver({
+              id: river.id,
+              name: river.name,
+              prefecture: river.prefecture,
+              currentStatus: river.currentStatus,
+              observatoryName: river.observatoryName,
+            }));
           }}
+          recentRivers={recentRivers}
           onSelectPrefecture={(prefecture) => {
             // ドロップダウンで県を選んだら、地方/地域フィルタはクリアして県単独で絞り込む
             setSelectedArea('all');

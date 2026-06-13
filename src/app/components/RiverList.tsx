@@ -3,8 +3,9 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History } from 'lucide-react';
 import { River } from '../App';
+import type { RecentRiver } from '../utils/recentRivers';
 
 interface RiverListProps {
   selectedRegion: string;
@@ -16,6 +17,7 @@ interface RiverListProps {
   onSelectPrefecture: (prefecture: string) => void;
   selectedRiverId?: string;
   rivers: River[];
+  recentRivers: RecentRiver[];
   isLoadingRivers: boolean;
 }
 
@@ -88,6 +90,7 @@ export function RiverList({
   onSelectPrefecture,
   selectedRiverId,
   rivers,
+  recentRivers,
   isLoadingRivers
 }: RiverListProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -204,10 +207,63 @@ export function RiverList({
     );
   }
 
-  // 未選択時は一覧を出さず、地域選択・検索へ誘導するガイドを表示
+  // 最近見た川をクリック：最新データを rivers から id で解決して詳細を開く
+  const handleRecentClick = (rr: RecentRiver) => {
+    const fresh = rivers.find((r) => r.id === rr.id);
+    if (fresh) onSelectRiver(fresh);
+  };
+
+  // 未選択時は一覧を出さず、最近見た川（あれば）＋地域選択・検索へ誘導するガイドを表示
   if (!isSearching) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-12 text-center">
+      <div className="space-y-4">
+        {recentRivers.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 px-1 mb-2">
+              <History className="w-4 h-4" style={{ color: '#0372ac' }} />
+              <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>最近見た川</h3>
+            </div>
+            <div className="space-y-2">
+              {recentRivers.map((rr) => (
+                <Card
+                  key={rr.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${rr.name} - ${rr.prefecture}`}
+                  className="p-3.5 rounded-xl cursor-pointer transition-all duration-150 border-l-4 border-l-slate-300 hover:bg-slate-50 hover:shadow-md hover:-translate-y-px active:scale-[0.99]"
+                  onClick={() => handleRecentClick(rr)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRecentClick(rr);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-slate-900 font-semibold text-sm truncate" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+                        {rr.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{rr.prefecture}</span>
+                        {rr.observatoryName && (
+                          <>
+                            <span className="text-slate-300">|</span>
+                            <span className="truncate text-slate-400">{rr.observatoryName}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-12 text-center">
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: '#e8f4f8' }}>
           <MapPin className="w-7 h-7" style={{ color: '#0372ac' }} />
         </div>
@@ -241,6 +297,7 @@ export function RiverList({
         <p className="mt-6 text-xs text-slate-400" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
           全国 <span className="font-bold" style={{ color: '#0372ac' }}>{rivers.length}</span> 件の川を収録
         </p>
+        </div>
       </div>
     );
   }

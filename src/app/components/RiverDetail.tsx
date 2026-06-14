@@ -2,7 +2,7 @@ import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle } from "lucide-react";
+import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star } from "lucide-react";
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
@@ -13,6 +13,8 @@ import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 interface RiverDetailProps {
   river: River;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 interface ObservationStation {
@@ -48,7 +50,7 @@ interface RiverCameraData {
   lastUpdated: string;
 }
 
-export function RiverDetail({ river }: RiverDetailProps) {
+export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetailProps) {
   const [observationStations, setObservationStations] = useState<ObservationStation[]>([]);
   const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
   const [loadingStations, setLoadingStations] = useState(false);
@@ -343,12 +345,26 @@ export function RiverDetail({ river }: RiverDetailProps) {
             </div>
             <p className="text-slate-500">延長: {river.length}km</p>
           </div>
-          <Badge 
-            variant={river.currentStatus === 'warning' ? 'destructive' : 'default'}
-            className={river.currentStatus === 'caution' ? 'bg-amber-500' : river.currentStatus === 'normal' ? 'bg-green-500' : ''}
-          >
-            {river.currentStatus === 'warning' ? '警戒' : river.currentStatus === 'caution' ? '注意' : '正常'}
-          </Badge>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {onToggleFavorite && (
+              <button
+                type="button"
+                onClick={onToggleFavorite}
+                aria-pressed={!!isFavorite}
+                aria-label={isFavorite ? 'お気に入りから外す' : 'お気に入りに追加'}
+                title={isFavorite ? 'お気に入りから外す' : 'お気に入りに追加'}
+                className="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+              >
+                <Star className={`w-5 h-5 ${isFavorite ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+              </button>
+            )}
+            <Badge
+              variant={river.currentStatus === 'warning' ? 'destructive' : 'default'}
+              className={river.currentStatus === 'caution' ? 'bg-amber-500' : river.currentStatus === 'normal' ? 'bg-green-500' : ''}
+            >
+              {river.currentStatus === 'warning' ? '警戒' : river.currentStatus === 'caution' ? '注意' : '正常'}
+            </Badge>
+          </div>
         </div>
 
         {/* Water Level - 一時非表示 */}

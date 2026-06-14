@@ -3,9 +3,10 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History, Video } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History, Video, Star } from 'lucide-react';
 import { River } from '../App';
 import type { RecentRiver } from '../utils/recentRivers';
+import type { FavoriteRiver } from '../utils/favoriteRivers';
 import { getRiverCamera } from '../utils/cameraProximity';
 
 interface RiverListProps {
@@ -20,6 +21,9 @@ interface RiverListProps {
   rivers: River[];
   recentRivers: RecentRiver[];
   onClearRecent: () => void;
+  favorites: FavoriteRiver[];
+  favoriteIds: Set<string>;
+  onToggleFavorite: (river: FavoriteRiver) => void;
   isLoadingRivers: boolean;
 }
 
@@ -106,6 +110,9 @@ export function RiverList({
   rivers,
   recentRivers,
   onClearRecent,
+  favorites,
+  favoriteIds,
+  onToggleFavorite,
   isLoadingRivers
 }: RiverListProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -232,6 +239,58 @@ export function RiverList({
   if (!isSearching) {
     return (
       <div className="space-y-4">
+        {favorites.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 px-1 mb-2">
+              <IconChip><Star className="size-4 fill-amber-400 text-amber-400" /></IconChip>
+              <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>お気に入り</h3>
+            </div>
+            <div className="space-y-2">
+              {favorites.map((fav) => (
+                <Card
+                  key={fav.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${fav.name} - ${fav.prefecture}`}
+                  className="p-3.5 rounded-xl cursor-pointer transition-all duration-150 border-l-4 border-l-amber-400 hover:bg-slate-50 hover:shadow-md hover:-translate-y-px active:scale-[0.99]"
+                  onClick={() => handleRecentClick(fav)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRecentClick(fav); }
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-slate-900 font-semibold text-sm truncate" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+                        {fav.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{fav.prefecture}</span>
+                        {fav.observatoryName && (
+                          <>
+                            <span className="text-slate-300">|</span>
+                            <span className="truncate text-slate-400">{fav.observatoryName}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onToggleFavorite(fav); }}
+                      className="p-1 -m-1 rounded-full hover:bg-slate-100 transition-colors"
+                      aria-label="お気に入りから外す"
+                      title="お気に入りから外す"
+                    >
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {recentRivers.length > 0 && (
           <div>
             <div className="flex items-center justify-between gap-2 px-1 mb-2">
@@ -418,6 +477,16 @@ export function RiverList({
                     </div>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onToggleFavorite(river); }}
+                      className="p-1 -m-1 rounded-full hover:bg-slate-100 transition-colors"
+                      aria-label={favoriteIds.has(river.id) ? 'お気に入りから外す' : 'お気に入りに追加'}
+                      aria-pressed={favoriteIds.has(river.id)}
+                      title={favoriteIds.has(river.id) ? 'お気に入りから外す' : 'お気に入りに追加'}
+                    >
+                      <Star className={`w-4 h-4 ${favoriteIds.has(river.id) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                    </button>
                     {getRiverCamera(river.id) && (
                       <span
                         className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-xs font-medium px-2 py-0.5"

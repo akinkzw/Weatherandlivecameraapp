@@ -5,6 +5,7 @@ import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
+import { getFavoriteRivers, toggleFavoriteRiver, type FavoriteRiver } from './utils/favoriteRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
@@ -105,6 +106,17 @@ function App() {
   const [rivers, setRivers] = useState<River[]>([])
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
   const [recentRivers, setRecentRivers] = useState<RecentRiver[]>(() => getRecentRivers());
+  const [favorites, setFavorites] = useState<FavoriteRiver[]>(() => getFavoriteRivers());
+  const favoriteIds = new Set(favorites.map((f) => f.id));
+  const handleToggleFavorite = (river: FavoriteRiver) => {
+    setFavorites(toggleFavoriteRiver({
+      id: river.id,
+      name: river.name,
+      prefecture: river.prefecture,
+      currentStatus: river.currentStatus,
+      observatoryName: river.observatoryName,
+    }));
+  };
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -920,6 +932,9 @@ function App() {
           }}
           recentRivers={recentRivers}
           onClearRecent={() => setRecentRivers(clearRecentRivers())}
+          favorites={favorites}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
           onSelectPrefecture={(prefecture) => {
             // ドロップダウンで県を選んだら、地方/地域フィルタはクリアして県単独で絞り込む
             setSelectedArea('all');
@@ -939,7 +954,13 @@ function App() {
             <DialogTitle>{selectedRiver?.name}</DialogTitle>
             <DialogDescription>川の詳細情報と天気予報を確認できます。</DialogDescription>
           </DialogHeader>
-          {selectedRiver && <RiverDetail river={selectedRiver} />}
+          {selectedRiver && (
+            <RiverDetail
+              river={selectedRiver}
+              isFavorite={favoriteIds.has(selectedRiver.id)}
+              onToggleFavorite={() => handleToggleFavorite(selectedRiver)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

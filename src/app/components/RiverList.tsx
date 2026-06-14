@@ -3,7 +3,7 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History, Video, Star } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronUp, ChevronRight, Waves, History, Video, Star } from 'lucide-react';
 import { River } from '../App';
 import type { RecentRiver } from '../utils/recentRivers';
 import type { FavoriteRiver } from '../utils/favoriteRivers';
@@ -116,6 +116,8 @@ export function RiverList({
   isLoadingRivers
 }: RiverListProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [favOpen, setFavOpen] = useState(false);
+  const [recentOpen, setRecentOpen] = useState(false);
 
   // データに存在する都道府県を北→南順＋件数付きで列挙（ドロップダウン用）
   // ※ 正規の47都道府県に一致するものだけを採用し、文字化けデータ（「三��県」等）は除外する
@@ -246,7 +248,7 @@ export function RiverList({
               <h3 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>お気に入り</h3>
             </div>
             <div className="space-y-2">
-              {favorites.map((fav) => (
+              {(favOpen ? favorites : favorites.slice(0, 3)).map((fav) => (
                 <Card
                   key={fav.id}
                   role="button"
@@ -288,6 +290,18 @@ export function RiverList({
                 </Card>
               ))}
             </div>
+            {favorites.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setFavOpen((o) => !o)}
+                className="mt-2 mx-auto flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
+                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+              >
+                {favOpen
+                  ? (<><ChevronUp className="w-3.5 h-3.5" />閉じる</>)
+                  : (<><ChevronDown className="w-3.5 h-3.5" />他{favorites.length - 3}件を表示</>)}
+              </button>
+            )}
           </div>
         )}
 
@@ -309,7 +323,7 @@ export function RiverList({
               </button>
             </div>
             <div className="space-y-2">
-              {recentRivers.map((rr) => (
+              {(recentOpen ? recentRivers : recentRivers.slice(0, 3)).map((rr) => (
                 <Card
                   key={rr.id}
                   role="button"
@@ -345,6 +359,18 @@ export function RiverList({
                 </Card>
               ))}
             </div>
+            {recentRivers.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setRecentOpen((o) => !o)}
+                className="mt-2 mx-auto flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
+                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+              >
+                {recentOpen
+                  ? (<><ChevronUp className="w-3.5 h-3.5" />閉じる</>)
+                  : (<><ChevronDown className="w-3.5 h-3.5" />他{recentRivers.length - 3}件を表示</>)}
+              </button>
+            )}
           </div>
         )}
 

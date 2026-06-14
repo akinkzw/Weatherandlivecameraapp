@@ -3,9 +3,10 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, MapPin, ChevronDown, ChevronRight, Waves, History, Video } from 'lucide-react';
 import { River } from '../App';
 import type { RecentRiver } from '../utils/recentRivers';
+import { getRiverCamera } from '../utils/cameraProximity';
 
 interface RiverListProps {
   selectedRegion: string;
@@ -417,6 +418,16 @@ export function RiverList({
                     </div>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-2">
+                    {getRiverCamera(river.id) && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-xs font-medium px-2 py-0.5"
+                        style={{ color: '#0372ac' }}
+                        title="近くにライブカメラがあります"
+                      >
+                        <Video className="w-3 h-3" />
+                        カメラ
+                      </span>
+                    )}
                     {getStatusBadge(river.currentStatus)}
                     <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   </div>

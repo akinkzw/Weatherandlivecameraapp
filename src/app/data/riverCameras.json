@@ -1,0 +1,1534 @@
+{
+"source": "国土交通省 川の防災情報",
+"sourceUrl": "https://www.river.go.jp/kawabou/",
+"note": "カメラ位置情報を加工して作成（1km以内に河川ライブカメラがある観測所）",
+"generatedAt": "2026-06-14",
+"thresholdKm": 1.0,
+"rivers": {
+"11166": {
+"cameraName": "野面水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.782502777&clon=130.733194444"
+},
+"11212": {
+"cameraName": "茨戸川　11.2kp　茨戸水位観測所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.166666667&clon=141.348333333"
+},
+"11256": {
+"cameraName": "佐久間町浦川",
+"distanceKm": 0.54,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.0572278&clon=137.7669389"
+},
+"17952": {
+"cameraName": "番屋橋",
+"distanceKm": 0.2,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.678022222&clon=139.650125"
+},
+"2001": {
+"cameraName": "角田出張所鉄塔",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.984447222&clon=140.798058333"
+},
+"2006": {
+"cameraName": "桑野川 左 9ｋ1阿南市 長生橋",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.906227777&clon=134.618947222"
+},
+"2024": {
+"cameraName": "豊平川  5.8Kp",
+"distanceKm": 0.17,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.9658&clon=141.31585"
+},
+"2031": {
+"cameraName": "皿沼",
+"distanceKm": 0.92,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.346&clon=140.277694444"
+},
+"2032": {
+"cameraName": "旭橋",
+"distanceKm": 0.98,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.151733333&clon=140.512411111"
+},
+"2035": {
+"cameraName": "城原川07Ｋ650右岸日出来橋水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.313608333&clon=130.366666666"
+},
+"2040": {
+"cameraName": "福知山水位観測所",
+"distanceKm": 0.16,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.303333333&clon=135.125555556"
+},
+"2043": {
+"cameraName": "安達ケ原3丁目(阿R56.8k+135)",
+"distanceKm": 0.35,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.5930663&clon=140.4614748"
+},
+"2044": {
+"cameraName": "天塩川　161.6kp　西多寄水位観測所",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=44.296388889&clon=142.368611111"
+},
+"2051": {
+"cameraName": "長楽橋上流付近",
+"distanceKm": 0.76,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.976725&clon=137.5514611"
+},
+"2053": {
+"cameraName": "肱江川水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.125556&clon=136.654167"
+},
+"2071": {
+"cameraName": "吸川",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.932780556&clon=141.152222222"
+},
+"2072": {
+"cameraName": "埼玉県三郷市栄",
+"distanceKm": 0.31,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.817641667&clon=139.887083333"
+},
+"2073": {
+"cameraName": "多摩川河口水位観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.536708333&clon=139.766708333"
+},
+"2075": {
+"cameraName": "利根川右岸 133.2k",
+"distanceKm": 0.27,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.159815&clon=139.679111"
+},
+"2077": {
+"cameraName": "下総利根大橋上流",
+"distanceKm": 0.68,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.037258333&clon=139.837208333"
+},
+"2080": {
+"cameraName": "飯野川橋右岸14.3ｋｍ",
+"distanceKm": 0.74,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.509166667&clon=141.315"
+},
+"2086": {
+"cameraName": "東鴉川第一堰堤左岸",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.681666667&clon=140.326388889"
+},
+"2091": {
+"cameraName": "坂川左岸 1.5k",
+"distanceKm": 0.24,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.826587&clon=139.906081"
+},
+"2093": {
+"cameraName": "小貝川水海道水位観測所",
+"distanceKm": 0.14,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.018061111&clon=139.997216667"
+},
+"2095": {
+"cameraName": "塩谷",
+"distanceKm": 0.64,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.1529556&clon=139.4141944"
+},
+"2098": {
+"cameraName": "東京都江戸川区東篠崎町　行徳可動堰　鉄塔",
+"distanceKm": 0.18,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.702172222&clon=139.918944444"
+},
+"2100": {
+"cameraName": "埼玉県川越市福田　入間川右岸　9.6kp",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.9563&clon=139.4741"
+},
+"2108": {
+"cameraName": "新早戸橋",
+"distanceKm": 0.52,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.387138888&clon=140.500194444"
+},
+"2113": {
+"cameraName": "千葉県松戸市栄町西",
+"distanceKm": 0.7,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.805452778&clon=139.892033333"
+},
+"2115": {
+"cameraName": "埼玉県八潮市古新田",
+"distanceKm": 0.91,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.802025&clon=139.854116667"
+},
+"2118": {
+"cameraName": "高取樋管",
+"distanceKm": 0.97,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.265941667&clon=139.643175"
+},
+"2158": {
+"cameraName": "妻木川下石川合流点",
+"distanceKm": 0.99,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.3234444&clon=137.1865252"
+},
+"2165": {
+"cameraName": "岩﨑",
+"distanceKm": 0.84,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.479082&clon=135.96474"
+},
+"2174": {
+"cameraName": "しのぶ堰堤",
+"distanceKm": 0.19,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.23743361&clon=137.52440667"
+},
+"2178": {
+"cameraName": "但東町出合",
+"distanceKm": 0.73,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.472642&clon=134.949898"
+},
+"2195": {
+"cameraName": "国府川　高城観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.428752778&clon=133.745383333"
+},
+"2196": {
+"cameraName": "洪水吐",
+"distanceKm": 0.54,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.958055556&clon=140.516388889"
+},
+"2203": {
+"cameraName": "瀬戸",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.2922222&clon=136.6441667"
+},
+"2209": {
+"cameraName": "田麦川砂防堰堤",
+"distanceKm": 0.54,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.571675&clon=139.929738889"
+},
+"2210": {
+"cameraName": "鈴鹿川出張所鉄塔",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.9078&clon=136.5974889"
+},
+"2213": {
+"cameraName": "猿谷ダム下流",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.178333333&clon=135.741111111"
+},
+"2221": {
+"cameraName": "戸郷川/庄原市三日市町　末納橋前",
+"distanceKm": 0.88,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.855732&clon=133.008273"
+},
+"2231": {
+"cameraName": "ダム左岸下流",
+"distanceKm": 0.16,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.555861111&clon=136.007722222"
+},
+"2238": {
+"cameraName": "津沢",
+"distanceKm": 0.24,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.624675&clon=136.8913556"
+},
+"2253": {
+"cameraName": "東野川",
+"distanceKm": 0.79,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.570351&clon=139.617987"
+},
+"2258": {
+"cameraName": "石井出張所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.544147222&clon=139.954477778"
+},
+"2261": {
+"cameraName": "真幸橋",
+"distanceKm": 0.34,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.052175&clon=130.766480555"
+},
+"2266": {
+"cameraName": "小鴨川　14ｋ000左岸",
+"distanceKm": 0.51,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.366458&clon=133.744627"
+},
+"2273": {
+"cameraName": "京蘭寺",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.804166667&clon=132.845555556"
+},
+"2304": {
+"cameraName": "輪厚川　2.1kp　輪厚水位観測所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.988333333&clon=141.564444444"
+},
+"2310": {
+"cameraName": "奥鐘橋",
+"distanceKm": 0.28,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.6972222&clon=137.6586111"
+},
+"2318": {
+"cameraName": "鹿子田橋",
+"distanceKm": 0.7,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=31.789297&clon=130.440638"
+},
+"2327": {
+"cameraName": "菊川　　16.9K-500　右岸",
+"distanceKm": 0.97,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.77035&clon=138.105022"
+},
+"2344": {
+"cameraName": "水無川流路工（大倉橋）",
+"distanceKm": 0.15,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.145666666&clon=138.994277777"
+},
+"2357": {
+"cameraName": "留萌川　18.4kp　幌糠観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.856430556&clon=141.759294444"
+},
+"2365": {
+"cameraName": "岡本水位観測所",
+"distanceKm": 0.5,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.4832111&clon=136.7104694"
+},
+"2369": {
+"cameraName": "厳木川1k850R中山警報所",
+"distanceKm": 0.55,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.348797&clon=130.018094"
+},
+"2390": {
+"cameraName": "滝里ダム　右岸下流",
+"distanceKm": 0.39,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.442308333&clon=142.287494444"
+},
+"2421": {
+"cameraName": "西達布川  11.2Kp",
+"distanceKm": 0.91,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.215630556&clon=142.500629444"
+},
+"2428": {
+"cameraName": "谷川橋",
+"distanceKm": 0.94,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.8788889&clon=131.8808333"
+},
+"2432": {
+"cameraName": "御嶽橋下流",
+"distanceKm": 0.95,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.9255245&clon=137.3070486"
+},
+"2439": {
+"cameraName": "旭川／岡山市北区御津草生（金川大橋）",
+"distanceKm": 0.79,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.800222&clon=133.936638"
+},
+"2465": {
+"cameraName": "新田排水ひ管",
+"distanceKm": 0.23,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.83199722&clon=137.95419166"
+},
+"2507": {
+"cameraName": "厚別川　2.6kp　世田ヶ谷排水機場　構内（１）",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.114927778&clon=141.477808333"
+},
+"2508": {
+"cameraName": "灰塚ダム管理支所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.782094444&clon=132.989636111"
+},
+"2523": {
+"cameraName": "琴音橋",
+"distanceKm": 0.27,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=40.21725&clon=140.248666667"
+},
+"2550": {
+"cameraName": "波瀬川(薬師橋)",
+"distanceKm": 0.07,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.6091389&clon=136.3712222"
+},
+"2607": {
+"cameraName": "水内川/広島市佐伯区湯来町大字麦谷　（森原橋）",
+"distanceKm": 0.09,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.525149&clon=132.316033"
+},
+"2622": {
+"cameraName": "富山北大橋",
+"distanceKm": 0.73,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.7083111&clon=137.208625"
+},
+"2629": {
+"cameraName": "渚滑川　19.0kp　上渚滑右岸",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=44.249305556&clon=143.259444444"
+},
+"2667": {
+"cameraName": "土岐川合流点",
+"distanceKm": 0.64,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.3671833&clon=137.2604028"
+},
+"2677": {
+"cameraName": "四ノ宮川_四ノ宮橋",
+"distanceKm": 0.74,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.990166&clon=135.821316"
+},
+"2691": {
+"cameraName": "大冷橋",
+"distanceKm": 0.32,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.6041111&clon=137.8000639"
+},
+"2743": {
+"cameraName": "金谷",
+"distanceKm": 0.14,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.82075&clon=138.149819444"
+},
+"300": {
+"cameraName": "大橋",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=40.516413889&clon=141.468897222"
+},
+"303": {
+"cameraName": "上流カメラ",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.754469444&clon=141.145833333"
+},
+"304": {
+"cameraName": "上流カメラ",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.692780556&clon=141.026111111"
+},
+"3410": {
+"cameraName": "須賀",
+"distanceKm": 0.73,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.340169444&clon=139.371477778"
+},
+"3431": {
+"cameraName": "千葉県野田市関宿三軒家　関宿城",
+"distanceKm": 0.7,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.100552778&clon=139.782497222"
+},
+"3449": {
+"cameraName": "川島水位観測所",
+"distanceKm": 0.29,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.290830556&clon=139.911386111"
+},
+"3458": {
+"cameraName": "宮田橋水位観測所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.725&clon=130.672777777"
+},
+"3484": {
+"cameraName": "広瀬川　細布橋",
+"distanceKm": 0.72,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.7343404&clon=140.6082773"
+},
+"3487": {
+"cameraName": "吉野川（花見橋付近）",
+"distanceKm": 0.39,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.052315&clon=140.158854"
+},
+"3505": {
+"cameraName": "利根川　小見川（千葉県香取）",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.861216667&clon=140.615419444"
+},
+"3506": {
+"cameraName": "小浜市遠敷付近",
+"distanceKm": 0.58,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.4852778&clon=135.7883333"
+},
+"3516": {
+"cameraName": "上中島橋",
+"distanceKm": 0.57,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.2697222&clon=131.3635"
+},
+"3526": {
+"cameraName": "ポントネ川  1.5Kp",
+"distanceKm": 0.83,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.2051&clon=141.78825"
+},
+"3555": {
+"cameraName": "日用川（今橋）",
+"distanceKm": 0.2,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.33467125&clon=136.44862055"
+},
+"3566": {
+"cameraName": "比和川/庄原市比和町比和　比和中央大橋前",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.982987&clon=132.986684"
+},
+"3573": {
+"cameraName": "服部川 荒木(下流側)",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.774166667&clon=136.160277778"
+},
+"3583": {
+"cameraName": "黒瀬橋",
+"distanceKm": 0.25,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.0980361&clon=138.8726472"
+},
+"359": {
+"cameraName": "白山弥陀ヶ原",
+"distanceKm": 0.14,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.1455528&clon=136.7633306"
+},
+"360": {
+"cameraName": "梯大橋",
+"distanceKm": 0.23,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.4155556&clon=136.4536083"
+},
+"361": {
+"cameraName": "県央土木　犀川　犀川大橋（転倒堰）",
+"distanceKm": 0.28,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.55952433&clon=136.6492627"
+},
+"363": {
+"cameraName": "福井市中角付近",
+"distanceKm": 0.53,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.098333333&clon=136.205416667"
+},
+"3657": {
+"cameraName": "幌向川  24.5Kp",
+"distanceKm": 0.72,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.161949833&clon=141.918669833"
+},
+"3669": {
+"cameraName": "新妻",
+"distanceKm": 0.24,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.8118336&clon=140.3171704"
+},
+"3672": {
+"cameraName": "御調川/尾道市御調町丸河南　河内橋前",
+"distanceKm": 0.4,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.49783&clon=133.117945"
+},
+"3676": {
+"cameraName": "東京都江戸川区東篠崎町　行徳可動堰　鉄塔",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.702172222&clon=139.918944444"
+},
+"368": {
+"cameraName": "船山橋",
+"distanceKm": 0.37,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.702441667&clon=138.45375"
+},
+"370": {
+"cameraName": "五番樋門",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.9088889&clon=135.7175"
+},
+"3713": {
+"cameraName": "高瀬川出張所　鉄塔",
+"distanceKm": 0.09,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.5122167&clon=137.839575"
+},
+"373": {
+"cameraName": "揖斐大橋",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.358333&clon=136.655556"
+},
+"375": {
+"cameraName": "松岡観測所",
+"distanceKm": 0.43,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.149441667&clon=138.630830556"
+},
+"378": {
+"cameraName": "中ノ町河川公園",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.7275111&clon=137.7989333"
+},
+"382": {
+"cameraName": "庄内川事務所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.2129417&clon=136.9009111"
+},
+"383": {
+"cameraName": "木曽川大橋（下）",
+"distanceKm": 0.45,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.056917&clon=136.725694"
+},
+"384": {
+"cameraName": "櫛田川出張所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.5426694&clon=136.5808194"
+},
+"385": {
+"cameraName": "辻久留４号排水樋管",
+"distanceKm": 0.77,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.4805&clon=136.6839806"
+},
+"387": {
+"cameraName": "唐橋放流警報局",
+"distanceKm": 0.31,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.975416667&clon=135.908125"
+},
+"391": {
+"cameraName": "淀川河川事務所",
+"distanceKm": 0.69,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.816111111&clon=135.641388889"
+},
+"392": {
+"cameraName": "五番樋門",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.9088889&clon=135.7175"
+},
+"393": {
+"cameraName": "若土観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.380522222&clon=133.776"
+},
+"394": {
+"cameraName": "ダム直下",
+"distanceKm": 0.11,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.88&clon=135.827777778"
+},
+"395": {
+"cameraName": "淀川河川事務所",
+"distanceKm": 0.69,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.816111111&clon=135.641388889"
+},
+"396": {
+"cameraName": "柏原",
+"distanceKm": 0.2,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.5827778&clon=135.6175"
+},
+"398": {
+"cameraName": "道明寺",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.5708333&clon=135.6213889"
+},
+"399": {
+"cameraName": "大門",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.899941667&clon=134.937011111"
+},
+"400": {
+"cameraName": "三方町",
+"distanceKm": 0.67,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.1878112&clon=134.625482"
+},
+"404": {
+"cameraName": "五條",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.346875&clon=135.6908806"
+},
+"407": {
+"cameraName": "五條",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.346875&clon=135.6908806"
+},
+"410": {
+"cameraName": "市田川排水機場01",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.7242333&clon=136.0084889"
+},
+"411": {
+"cameraName": "袋河原水位観測所",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.415047222&clon=134.202494444"
+},
+"419": {
+"cameraName": "旭川／岡山市北区牟佐",
+"distanceKm": 0.11,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.741224&clon=133.961577"
+},
+"429": {
+"cameraName": "小瀬川出張所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.208047222&clon=132.1931"
+},
+"432": {
+"cameraName": "那賀川 右 7ｋ0阿南市 那賀川橋",
+"distanceKm": 0.33,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.937638888&clon=134.621863888"
+},
+"439": {
+"cameraName": "重信川 右 8ｋ3松山市 井門霞堤",
+"distanceKm": 0.61,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.791497222&clon=132.782608333"
+},
+"440": {
+"cameraName": "肱川水系鹿野川ダム愛媛県大洲市肱川町ダム上流直上",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.45&clon=132.686666666"
+},
+"447": {
+"cameraName": "筑後川右岸28K600筑後川河川事務所＿屋上カメラ",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.331388888&clon=130.525555555"
+},
+"448": {
+"cameraName": "遠賀川河川事務所下流",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.740275&clon=130.731111111"
+},
+"452": {
+"cameraName": "嘉瀬川大堰屋上",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.238611111&clon=130.243886111"
+},
+"453": {
+"cameraName": "潮見橋",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.175275&clon=130.047777777"
+},
+"454": {
+"cameraName": "川西橋",
+"distanceKm": 0.09,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.300313888&clon=129.968505555"
+},
+"459": {
+"cameraName": "代継橋",
+"distanceKm": 0.22,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.796108333&clon=130.706111111"
+},
+"460": {
+"cameraName": "蓍町橋",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.734997222&clon=130.739163888"
+},
+"462": {
+"cameraName": "八代事務所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.500830555&clon=130.619722222"
+},
+"463": {
+"cameraName": "白滝橋地点",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.161480555&clon=131.650369444"
+},
+"464": {
+"cameraName": "府内大橋地点",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.201433333&clon=131.6056"
+},
+"465": {
+"cameraName": "筑後川右岸75K000日田出張所＿屋上カメラ",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.312880555&clon=130.926141666"
+},
+"470": {
+"cameraName": "三輪水位観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.563333333&clon=131.619166666"
+},
+"471": {
+"cameraName": "太平橋",
+"distanceKm": 0.32,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=31.820461111&clon=130.310833333"
+},
+"477": {
+"cameraName": "機初水位観測所",
+"distanceKm": 0.38,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.533597222&clon=140.5397"
+},
+"4783": {
+"cameraName": "杉橋",
+"distanceKm": 0.34,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.193333333&clon=130.030277777"
+},
+"4826": {
+"cameraName": "出合",
+"distanceKm": 0.23,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.362086292&clon=134.593074066"
+},
+"4839": {
+"cameraName": "宇陀川 箕曲中村２",
+"distanceKm": 0.74,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.6091083&clon=136.08045277"
+},
+"4855": {
+"cameraName": "栄橋観測局",
+"distanceKm": 0.46,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.835972222&clon=139.580111111"
+},
+"4862": {
+"cameraName": "木曽川下流河川事務所鉄塔",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.078056&clon=136.686944"
+},
+"4869": {
+"cameraName": "祇園",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.303666666&clon=130.203388888"
+},
+"4871": {
+"cameraName": "桃津",
+"distanceKm": 0.8,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.83413&clon=135.02959"
+},
+"4879": {
+"cameraName": "出屋敷歩道橋",
+"distanceKm": 0.77,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.820858&clon=135.68597"
+},
+"4887": {
+"cameraName": "船頭平閘門（屋上）",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.132222&clon=136.681111"
+},
+"4891": {
+"cameraName": "暁雲",
+"distanceKm": 0.85,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.912311&clon=135.071669"
+},
+"4921": {
+"cameraName": "布野川/三次市布野町上布野　小原屋橋",
+"distanceKm": 0.21,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.883808&clon=132.78147"
+},
+"4997": {
+"cameraName": "板木川/三次市三和町羽出庭　下板木橋",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.692402&clon=132.832867"
+},
+"5022": {
+"cameraName": "和良川荒川橋",
+"distanceKm": 0.88,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.7408242&clon=137.0718483"
+},
+"5023": {
+"cameraName": "板東",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.5975&clon=135.7672222"
+},
+"5030": {
+"cameraName": "熊沢橋",
+"distanceKm": 0.36,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=40.0653565&clon=140.8065061"
+},
+"5055": {
+"cameraName": "浅山橋",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.536928&clon=139.498187"
+},
+"5057": {
+"cameraName": "桑野川 左 -0ｋ5 阿南市 河口",
+"distanceKm": 0.61,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.932236111&clon=134.703530555"
+},
+"5058": {
+"cameraName": "南川水位観測所",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.9069611&clon=136.6160889"
+},
+"5071": {
+"cameraName": "日の倉橋下流",
+"distanceKm": 0.24,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.734166667&clon=140.386666667"
+},
+"5075": {
+"cameraName": "五反田",
+"distanceKm": 0.85,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.690780556&clon=139.025686419"
+},
+"5094": {
+"cameraName": "長井ダム　平山",
+"distanceKm": 0.09,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.095366667&clon=139.980216667"
+},
+"5100": {
+"cameraName": "風呂川",
+"distanceKm": 0.32,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.928058333&clon=141.256944444"
+},
+"5103": {
+"cameraName": "宇井",
+"distanceKm": 0.72,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.158611111&clon=135.749444444"
+},
+"5111": {
+"cameraName": "春日橋水位観測所",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.631666666&clon=130.792777777"
+},
+"5115": {
+"cameraName": "石園水位観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.798991666&clon=130.725602777"
+},
+"5118": {
+"cameraName": "多度橋",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.138611&clon=136.650278"
+},
+"5120": {
+"cameraName": "古川橋",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.45&clon=136.734722"
+},
+"5122": {
+"cameraName": "安野橋",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.392225&clon=141.150836111"
+},
+"5125": {
+"cameraName": "東無加川  0.4Kp",
+"distanceKm": 0.15,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.788888889&clon=143.622226667"
+},
+"5128": {
+"cameraName": "雲出川　左岸　14.0km-50.0m",
+"distanceKm": 0.56,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.670889&clon=136.422944"
+},
+"5146": {
+"cameraName": "望月寒川　0.9kp　望月寒水位流量観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.074722222&clon=141.426388889"
+},
+"5151": {
+"cameraName": "岩崎水位観測所",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.937111111&clon=130.561361111"
+},
+"5157": {
+"cameraName": "小市橋",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.6200556&clon=138.1416806"
+},
+"5159": {
+"cameraName": "伏籠川　2.4kp　伏籠下流水位観測所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.152777778&clon=141.370555556"
+},
+"5164": {
+"cameraName": "塩田橋水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.35475&clon=136.594889"
+},
+"5192": {
+"cameraName": "落合橋",
+"distanceKm": 0.07,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.343611111&clon=140.311111111"
+},
+"5204": {
+"cameraName": "上松川橋上流",
+"distanceKm": 0.43,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.780277778&clon=140.438611111"
+},
+"5214": {
+"cameraName": "旧北上川33.5kＲ",
+"distanceKm": 0.6,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.607643&clon=141.285464"
+},
+"5215": {
+"cameraName": "三篠橋上流",
+"distanceKm": 0.17,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.4084&clon=132.456711111"
+},
+"5216": {
+"cameraName": "西根下堰水位観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.829722222&clon=140.455555556"
+},
+"5235": {
+"cameraName": "百田",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=40.644744444&clon=140.494172222"
+},
+"5237": {
+"cameraName": "堀切橋",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.671927778&clon=138.476794444"
+},
+"5238": {
+"cameraName": "小川橋",
+"distanceKm": 1.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.0531139&clon=138.9648556"
+},
+"5257": {
+"cameraName": "熊野川 相筋",
+"distanceKm": 0.65,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.734227778&clon=135.975844444"
+},
+"5262": {
+"cameraName": "神谷川合流部",
+"distanceKm": 0.53,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.55&clon=133.276111111"
+},
+"5294": {
+"cameraName": "下田水位観測所",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.7179667&clon=135.9956389"
+},
+"5314": {
+"cameraName": "創成川　0.8kp　創成水位観測所",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.156388889&clon=141.351666667"
+},
+"5315": {
+"cameraName": "田川出張所",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.648608333&clon=130.811111111"
+},
+"5328": {
+"cameraName": "立ヶ花橋",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.731925&clon=138.3097472"
+},
+"5329": {
+"cameraName": "信濃川河川事務所屋上",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.4486111&clon=138.8372222"
+},
+"5335": {
+"cameraName": "日川橋",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.660655556&clon=138.676858333"
+},
+"5346": {
+"cameraName": "宝満川7Ｋ940右岸端間水位観測所",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.377055555&clon=130.550869444"
+},
+"5358": {
+"cameraName": "中川 御津町苅屋１",
+"distanceKm": 0.45,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.7837916&clon=134.57291388"
+},
+"5370": {
+"cameraName": "山岸",
+"distanceKm": 0.38,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.714166667&clon=141.170833333"
+},
+"5403": {
+"cameraName": "羽月川   4k000 金波田第三樋門",
+"distanceKm": 0.74,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.037678&clon=130.610773"
+},
+"5411": {
+"cameraName": "長井ダム　合地沢",
+"distanceKm": 0.55,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.118283333&clon=139.9335"
+},
+"5431": {
+"cameraName": "小森野排水機場＿内水位",
+"distanceKm": 0.19,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.337613888&clon=130.507566666"
+},
+"5443": {
+"cameraName": "堂川樋門",
+"distanceKm": 0.59,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.0722222&clon=138.9461111"
+},
+"5444": {
+"cameraName": "熊野川 相筋",
+"distanceKm": 0.73,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.734227778&clon=135.975844444"
+},
+"5470": {
+"cameraName": "新江合川4.2kＲ",
+"distanceKm": 0.33,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.568611&clon=140.979722"
+},
+"5473": {
+"cameraName": "旧美唄川　4.0kp　旧美唄橋水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.250277778&clon=141.676388889"
+},
+"5477": {
+"cameraName": "釜無川K220",
+"distanceKm": 0.55,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.690744444&clon=138.473305556"
+},
+"5482": {
+"cameraName": "古川橋(上流)",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.87416666&clon=141.16055555"
+},
+"5495": {
+"cameraName": "機初水位観測所",
+"distanceKm": 0.38,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.533597222&clon=140.5397"
+},
+"5497": {
+"cameraName": "産化美唄川　4.8kp　産化美唄観測所",
+"distanceKm": 0.07,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.365833333&clon=141.798333333"
+},
+"5506": {
+"cameraName": "宮ノ下水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.478816667&clon=134.268727778"
+},
+"5507": {
+"cameraName": "夏吉水位観測所",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.665886111&clon=130.812072222"
+},
+"5511": {
+"cameraName": "牛朱別川　11.8kp　鹿島橋水位観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.804444444&clon=142.486944444"
+},
+"5534": {
+"cameraName": "生見水位観測所",
+"distanceKm": 0.21,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.723594444&clon=130.665805555"
+},
+"5539": {
+"cameraName": "新釧路川　１．０ｋｐ　鳥取橋水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.006836111&clon=144.367244444"
+},
+"5551": {
+"cameraName": "鏡橋",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.0408333&clon=138.9297222"
+},
+"5589": {
+"cameraName": "埋津",
+"distanceKm": 0.58,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.832763888&clon=130.059516666"
+},
+"5595": {
+"cameraName": "河原田水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.9191&clon=136.5960111"
+},
+"5599": {
+"cameraName": "高良川左岸01K500高良川橋",
+"distanceKm": 0.17,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.313091666&clon=130.535022222"
+},
+"5620": {
+"cameraName": "川副大橋",
+"distanceKm": 0.3,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.184441666&clon=130.337222222"
+},
+"5628": {
+"cameraName": "辺別川　1.0kp　18号水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.665277778&clon=142.403608333"
+},
+"5637": {
+"cameraName": "蓮沼",
+"distanceKm": 0.0,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.6538806&clon=136.8602833"
+},
+"5639": {
+"cameraName": "十勝川　６２．０ｋｐ　西士狩樋門",
+"distanceKm": 0.33,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.9485&clon=143.145861111"
+},
+"5640": {
+"cameraName": "新川橋（空間）",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.507361111&clon=132.516844444"
+},
+"5641": {
+"cameraName": "風連別川KP2.2右岸カメラ",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=44.3172147&clon=142.4484467"
+},
+"5662": {
+"cameraName": "高田橋",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.547706&clon=139.619308"
+},
+"5673": {
+"cameraName": "創成川　0.7kp　創成排水機場　空間",
+"distanceKm": 0.36,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.157416667&clon=141.351811111"
+},
+"5704": {
+"cameraName": "間庭橋",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.911386111&clon=131.796711111"
+},
+"5747": {
+"cameraName": "嶮淵川　7.2kp　嶮淵水位観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.910277778&clon=141.722777778"
+},
+"5750": {
+"cameraName": "下島橋",
+"distanceKm": 0.09,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.2180444&clon=137.8715972"
+},
+"5762": {
+"cameraName": "湯所川排水機場１",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.513441667&clon=134.228855556"
+},
+"5780": {
+"cameraName": "寺家橋",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.569625&clon=139.512174"
+},
+"5807": {
+"cameraName": "広田水位観測所",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.8839&clon=139.837797222"
+},
+"5816": {
+"cameraName": "篠路新川　3.7kp　モエレ水位観測所",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.117322222&clon=141.427033333"
+},
+"5849": {
+"cameraName": "高幡橋水位観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.664188889&clon=139.410169444"
+},
+"5851": {
+"cameraName": "仁井田前林川原(荒L5.4k+25)",
+"distanceKm": 0.94,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.7494622&clon=140.4097403"
+},
+"5875": {
+"cameraName": "月寒川　3.6kp　月寒水位観測所",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.0575&clon=141.431111111"
+},
+"5905": {
+"cameraName": "漁川　11.4kp　日の出橋",
+"distanceKm": 0.14,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.878330556&clon=141.571941667"
+},
+"5920": {
+"cameraName": "隈上川左岸01K300西隈上橋",
+"distanceKm": 0.57,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.338702777&clon=130.793694444"
+},
+"5924": {
+"cameraName": "永山新川　4.3kp　北永水位観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=43.808333333&clon=142.465833333"
+},
+"5951": {
+"cameraName": "黒水",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.630413&clon=139.096227"
+},
+"7278": {
+"cameraName": "引原ダム上流",
+"distanceKm": 0.14,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.2303&clon=134.53831"
+},
+"7327": {
+"cameraName": "重川橋",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.669616667&clon=138.681355556"
+},
+"7368": {
+"cameraName": "島松川  6.4Kp",
+"distanceKm": 0.79,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.936536111&clon=141.561487222"
+},
+"7384": {
+"cameraName": "大河津分水第二床固右岸２",
+"distanceKm": 0.15,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.66443055&clon=138.78724444"
+},
+"7591": {
+"cameraName": "古川（安川合流点）",
+"distanceKm": 0.64,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.455727778&clon=132.477419444"
+},
+"7686": {
+"cameraName": "黒薙川合流点",
+"distanceKm": 0.96,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.787775&clon=137.6183333"
+},
+"7734": {
+"cameraName": "鳥山水位観測所",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.50395&clon=139.606827778"
+},
+"7778": {
+"cameraName": "昆布刈橋地点",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.168638888&clon=131.638475"
+},
+"7779": {
+"cameraName": "草津観測所",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.362747222&clon=132.404338889"
+},
+"8145": {
+"cameraName": "鉄道橋水位",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=31.376666666&clon=130.849997222"
+},
+"8197": {
+"cameraName": "帯広川　2.2kp　東３条水位観測所",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=42.933222222&clon=143.209472222"
+},
+"8229": {
+"cameraName": "江上",
+"distanceKm": 0.01,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.247927777&clon=130.327238888"
+},
+"8236": {
+"cameraName": "奈良間雨量水位",
+"distanceKm": 0.04,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.015833333&clon=138.268888889"
+},
+"8237": {
+"cameraName": "三階橋下流",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.2088194&clon=136.9286139"
+},
+"8254": {
+"cameraName": "高田橋地点",
+"distanceKm": 0.07,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.214813888&clon=131.681016666"
+},
+"8278": {
+"cameraName": "島々谷川",
+"distanceKm": 0.1,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.1853694&clon=137.7837417"
+},
+"8283": {
+"cameraName": "福川/福山市神島町　第一佐波排水機場前",
+"distanceKm": 0.06,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.483883&clon=133.341203"
+},
+"8297": {
+"cameraName": "万願寺",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.856388889&clon=134.901944444"
+},
+"8302": {
+"cameraName": "大橋(おおはし)川出張所",
+"distanceKm": 0.49,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.468638889&clon=133.064527778"
+},
+"8307": {
+"cameraName": "方財水門",
+"distanceKm": 0.45,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.582777777&clon=131.701388888"
+},
+"8327": {
+"cameraName": "埼玉県三郷市栄",
+"distanceKm": 0.16,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.817641667&clon=139.887083333"
+},
+"8347": {
+"cameraName": "新元島町",
+"distanceKm": 0.96,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.947436&clon=139.146984"
+},
+"8373": {
+"cameraName": "法師戸機場",
+"distanceKm": 0.52,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.988222222&clon=139.917497222"
+},
+"8386": {
+"cameraName": "谷川",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.080795&clon=135.043001"
+},
+"8392": {
+"cameraName": "須和田橋",
+"distanceKm": 0.59,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.734956&clon=139.919582"
+},
+"8408": {
+"cameraName": "弘原水位観測所",
+"distanceKm": 0.05,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.463611111&clon=134.8675"
+},
+"8427": {
+"cameraName": "北柏橋",
+"distanceKm": 0.08,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.873123&clon=139.985033"
+},
+"8436": {
+"cameraName": "中原",
+"distanceKm": 0.13,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.693611111&clon=133.946666667"
+},
+"8484": {
+"cameraName": "嶺田水位観測所",
+"distanceKm": 0.49,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.695&clon=138.0748611"
+},
+"8511": {
+"cameraName": "直海谷川（内尾前橋）",
+"distanceKm": 0.35,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.347735&clon=136.677932"
+},
+"8551": {
+"cameraName": "新潟大堰左岸下流",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.9088861&clon=139.0022222"
+},
+"8553": {
+"cameraName": "烏川橋",
+"distanceKm": 0.86,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.319467&clon=137.84706"
+},
+"8569": {
+"cameraName": "芋川・寺野砂防堰堤上流",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.344222222&clon=138.920166666"
+},
+"8685": {
+"cameraName": "口太川　樋の口橋",
+"distanceKm": 0.6,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.53121&clon=140.609314"
+},
+"8698": {
+"cameraName": "福山川第３号砂防堰堤",
+"distanceKm": 0.02,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.374916666&clon=138.979305555"
+},
+"8730": {
+"cameraName": "村内橋",
+"distanceKm": 0.68,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.13025&clon=131.3465"
+},
+"8806": {
+"cameraName": "相川　大橋",
+"distanceKm": 0.94,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.6853591&clon=138.5657721"
+},
+"8875": {
+"cameraName": "桑畑橋",
+"distanceKm": 0.6,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.0647222&clon=131.3675"
+},
+"8905": {
+"cameraName": "千葉県松戸市栄町西",
+"distanceKm": 0.75,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.805452778&clon=139.892033333"
+},
+"8906": {
+"cameraName": "増林観測所",
+"distanceKm": 0.03,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.9125833&clon=139.8013556"
+},
+"8908": {
+"cameraName": "牛島観測所",
+"distanceKm": 0.81,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.9814778&clon=139.7817194"
+},
+"8917": {
+"cameraName": "左岸下流",
+"distanceKm": 0.26,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.903888889&clon=135.41"
+},
+"8936": {
+"cameraName": "長坂（安養寺）",
+"distanceKm": 0.52,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.0016667&clon=141.2558333"
+},
+"8945": {
+"cameraName": "雄物川割山",
+"distanceKm": 0.9,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=39.694722222&clon=140.083055556"
+},
+"8952": {
+"cameraName": "広田水位観測所",
+"distanceKm": 0.65,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.8839&clon=139.837797222"
+},
+"8963": {
+"cameraName": "利根川　右岸　1.0kp",
+"distanceKm": 0.47,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.73675&clon=140.839966"
+},
+"8969": {
+"cameraName": "新川橋（豊穂川）小山市大行寺",
+"distanceKm": 0.32,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.314744&clon=139.78869"
+},
+"8970": {
+"cameraName": "那珂川右岸　那珂川上流出張所鉄塔",
+"distanceKm": 0.2,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.651097222&clon=140.1561"
+},
+"8975": {
+"cameraName": "広見橋水位観測所",
+"distanceKm": 0.96,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.406833333&clon=139.349916667"
+},
+"8981": {
+"cameraName": "埼玉県熊谷市榎町　荒川左岸　76.5kp",
+"distanceKm": 0.31,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.137738&clon=139.378958"
+},
+"8986": {
+"cameraName": "利根川　右岸　1.0kp",
+"distanceKm": 0.47,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.73675&clon=140.839966"
+},
+"8992": {
+"cameraName": "溝田橋",
+"distanceKm": 0.44,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.753797222&clon=139.742222222"
+},
+"8997": {
+"cameraName": "下菊川",
+"distanceKm": 0.96,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.266142&clon=139.1844459"
+},
+"9001": {
+"cameraName": "萬代橋",
+"distanceKm": 0.35,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=37.9184889&clon=139.0505083"
+},
+"9002": {
+"cameraName": "葛籠山",
+"distanceKm": 0.12,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=38.1351972&clon=139.4612333"
+},
+"9024": {
+"cameraName": "桂川　強瀬橋",
+"distanceKm": 0.75,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.614328&clon=138.958903"
+},
+"9029": {
+"cameraName": "落合橋",
+"distanceKm": 0.61,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.6208694&clon=138.2404833"
+},
+"9031": {
+"cameraName": "河童橋",
+"distanceKm": 0.16,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=36.2488139&clon=137.6382306"
+},
+"9060": {
+"cameraName": "名神高速下流右岸",
+"distanceKm": 0.47,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.968611111&clon=135.904305556"
+},
+"9075": {
+"cameraName": "芥川橋",
+"distanceKm": 0.8,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.85235833&clon=135.607208"
+},
+"9077": {
+"cameraName": "円山川 (新)城崎大橋東詰",
+"distanceKm": 0.68,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=35.6264977&clon=134.8228649"
+},
+"9081": {
+"cameraName": "五條",
+"distanceKm": 0.21,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.346875&clon=135.6908806"
+},
+"9108": {
+"cameraName": "寺戸",
+"distanceKm": 0.31,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=34.81&clon=132.851111111"
+},
+"9142": {
+"cameraName": "筑後川06Ｋ700中下昇開橋下流",
+"distanceKm": 0.46,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.215238888&clon=130.361436111"
+},
+"9155": {
+"cameraName": "上曽木水位観測所",
+"distanceKm": 0.51,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=33.493827778&clon=131.171022222"
+},
+"9160": {
+"cameraName": "川島排水機場川表カメラ",
+"distanceKm": 0.4,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=32.613611111&clon=131.695555555"
+},
+"9164": {
+"cameraName": "日当山橋",
+"distanceKm": 0.67,
+"mapUrl": "https://www.river.go.jp/kawabou/pc/tm?itmkndCd=8&fld=0&mapType=0&zm=15&clat=31.7705528&clon=130.7547222"
+}
+}
+}

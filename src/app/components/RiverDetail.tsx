@@ -6,6 +6,7 @@ import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer,
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
+import { getRiverCamera, CAMERA_SOURCE } from '../utils/cameraProximity';
 import { getPrefectureCameraUrl } from '../utils/prefectureLinks';
 import { useState, useEffect } from 'react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -309,6 +310,8 @@ export function RiverDetail({ river }: RiverDetailProps) {
   // 国土交通省の川の防災情報からカメラデータを取得
   const nationalCameras = getRiverCameras(river.name);
   const cameras = nationalCameras.length > 0 ? nationalCameras : river.cameras || [];
+  // 近隣ライブカメラ（静的同梱データ・1km以内・出典: 川の防災情報）
+  const nearbyCamera = getRiverCamera(river.id);
   
   // 天気データ（APIからの取得を優先、なければデフォルト）
   const weather = apiWeather.length > 0 ? apiWeather : 
@@ -424,6 +427,44 @@ export function RiverDetail({ river }: RiverDetailProps) {
 
         <TabsContent value="cameras" className="mt-4">
           <div className="grid gap-4">
+            {/* 近隣ライブカメラ（静的同梱・1km以内・出典: 川の防災情報。リンクのみ） */}
+            {nearbyCamera && (
+              <Card className="overflow-hidden border-0" style={{ backgroundColor: '#effcff' }}>
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: '#0372ac' }}>
+                      <Video className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-slate-900 mb-1">近くのライブカメラ</h4>
+                      <div className="flex items-center gap-2 text-slate-600 text-sm">
+                        <MapPin className="w-3 h-3" />
+                        <span>{nearbyCamera.cameraName}（約{nearbyCamera.distanceKm}km）</span>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={nearbyCamera.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-white py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+                    style={{ backgroundColor: '#0372ac' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#025a87'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0372ac'}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Video className="w-4 h-4" />
+                      <span>ライブカメラを見る</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </div>
+                  </a>
+                  <p className="text-xs text-slate-400 mt-3">
+                    出典：{CAMERA_SOURCE}（位置情報を加工して作成）
+                  </p>
+                </div>
+              </Card>
+            )}
+
             {/* GraphQL/スクレイピングAPIから取得したライブカメラ情報 */}
             {apiCameras.length > 0 && (
               <div className="space-y-4">

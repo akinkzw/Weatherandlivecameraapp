@@ -222,7 +222,7 @@ export async function getCurrentWeather(
 export async function getPressureTrend(
   latitude: number,
   longitude: number
-): Promise<{ trend: 'rising' | 'falling' | 'steady'; deltaHpa: number } | null> {
+): Promise<{ trend: 'rising' | 'falling' | 'steady'; deltaHpa: number; series: number[] } | null> {
   const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
   if (!apiKey) return null;
 
@@ -233,12 +233,15 @@ export async function getPressureTrend(
     const data: OpenWeatherResponse = await response.json();
     const list = data.list;
     if (!list || list.length < 3) return null;
-    const p0 = list[0]?.main?.pressure;
-    const pLater = list[2]?.main?.pressure; // 約6時間後（3hごと × 2）
-    if (typeof p0 !== 'number' || typeof pLater !== 'number') return null;
-    const delta = Math.round(pLater - p0);
+    // 今後48時間の気圧系列（3時間ごと、最大16点）。スパークライン描画用。
+    const series = list
+      .slice(0, 16)
+      .map((it) => it?.main?.pressure)
+      .filter((p): p is number => typeof p === 'number');
+    if (series.length < 2) return null;
+    const delta = Math.round(series[Math.min(2, series.length - 1)] - series[0]); // 約6時間後との差
     const trend = delta >= 2 ? 'rising' : delta <= -2 ? 'falling' : 'steady';
-    return { trend, deltaHpa: delta };
+    return { trend, deltaHpa: delta, series };
   } catch (error) {
     console.error('Error fetching pressure trend:', error);
     return null;

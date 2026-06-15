@@ -56,6 +56,41 @@ function windDirection(deg: number | null | undefined): string {
   return WIND_DIRS[Math.round(deg / 22.5) % 16];
 }
 
+// 気圧の今後トレンド（予報の3時間ごとの気圧）をSVGスパークラインで描画。依存追加なし。
+function PressureSparkline({ series }: { series: number[] }) {
+  if (!series || series.length < 2) return null;
+  const w = 240, h = 40, pad = 4;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const range = max - min || 1;
+  const points = series
+    .map((p, i) => {
+      const x = pad + (i / (series.length - 1)) * (w - pad * 2);
+      const y = pad + (1 - (p - min) / range) * (h - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  return (
+    <div className="mt-4">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-slate-600 text-sm">気圧の推移（今後48時間）</span>
+        <span className="text-slate-500 text-xs">{min}–{max} hPa</span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-10" role="img" aria-label="今後48時間の気圧の推移">
+        <polyline
+          points={points}
+          fill="none"
+          stroke="#0372ac"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetailProps) {
   const [observationStations, setObservationStations] = useState<ObservationStation[]>([]);
   const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
@@ -458,6 +493,9 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
                       </div>
                     </div>
                   </div>
+                  {currentWeather.pressureTrend?.series?.length > 1 && (
+                    <PressureSparkline series={currentWeather.pressureTrend.series} />
+                  )}
                 </div>
               </div>
             )}

@@ -63,6 +63,7 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
   const [dataSource, setDataSource] = useState<string>('');
   const [apiWeather, setApiWeather] = useState<any[]>([]);
   const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [yesterday, setYesterday] = useState<any>(null);
   const [realtimeWaterLevel, setRealtimeWaterLevel] = useState<any>(null);
   const [loadingWaterLevel, setLoadingWaterLevel] = useState(false);
 
@@ -302,6 +303,9 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             console.log('✅ Setting current weather');
             setCurrentWeather({ ...data.current, pressureTrend: data.pressureTrend });
           }
+          if (data.yesterday) {
+            setYesterday(data.yesterday);
+          }
         } else {
           console.error('Weather API error:', weatherResponse.status);
           const errorText = await weatherResponse.text();
@@ -460,7 +464,24 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             
             {/* 予報 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {weather.map((day, index) => (
+              {/* 前日（実績）：釣り人向けに昨日の実降水量(mm)を表示 */}
+              {yesterday && (
+                <div className="bg-amber-50 rounded-lg p-4 text-center ring-1 ring-amber-200">
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    <Calendar className="w-3 h-3 text-amber-600" />
+                    <p className="text-amber-700">前日</p>
+                  </div>
+                  <div className="mb-3">{getWeatherIcon(yesterday.weatherDescription)}</div>
+                  <p className="text-slate-900 mb-1">{yesterday.weatherDescription}</p>
+                  <p className="text-slate-700 mb-2">{yesterday.tempMax}° / {yesterday.tempMin}°</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <Droplets className="w-3 h-3 text-blue-500" />
+                    <span className="text-slate-600">{yesterday.precipitation}mm</span>
+                  </div>
+                </div>
+              )}
+              {/* 予報：前日を出す場合は枚数を合わせて直近3日に絞る */}
+              {(yesterday ? weather.slice(0, 3) : weather).map((day, index) => (
                 <div key={index} className="bg-slate-50 rounded-lg p-4 text-center">
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Calendar className="w-3 h-3 text-slate-500" />

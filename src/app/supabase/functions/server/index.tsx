@@ -8,7 +8,7 @@ import {
   extractCameraInfo,
   type RiverObservationMetadata 
 } from './dpf_graphql.tsx';
-import { getWeatherForecast, getCurrentWeather } from './openweather.tsx';
+import { getWeatherForecast, getCurrentWeather, getPressureTrend } from './openweather.tsx';
 import { getYesterdayWeather } from './weatherapi.tsx';
 import { getYesterdayWeatherFromOpenMeteo } from './openmeteo.tsx';
 import { estimateRiverStatusFromRainfall, detectRiverScale } from './rainfall_estimator.tsx';
@@ -1183,7 +1183,15 @@ async function handler(req: Request): Promise<Response> {
         console.log('📊 First forecast item:', forecast[0]);
       }
       
-      return jsonResponse({ success: true, yesterday, current, forecast });
+      let pressureTrend = null;
+      try {
+        pressureTrend = await getPressureTrend(lat, lon);
+        console.log('✅ Pressure trend:', pressureTrend ? pressureTrend.trend : 'NULL');
+      } catch (error) {
+        console.error('❌ Error fetching pressure trend:', error);
+      }
+
+      return jsonResponse({ success: true, yesterday, current, forecast, pressureTrend });
     }
 
     // DPF観��所情報

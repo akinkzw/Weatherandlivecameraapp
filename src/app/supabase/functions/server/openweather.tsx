@@ -19,6 +19,7 @@ interface OpenWeatherResponse {
     main: {
       temp: number;
       humidity: number;
+      pressure?: number;
     };
     weather: Array<{
       main: string;
@@ -28,6 +29,7 @@ interface OpenWeatherResponse {
     pop: number; // Probability of precipitation (0-1)
     wind: {
       speed: number;
+      deg?: number;
     };
   }>;
 }
@@ -167,7 +169,7 @@ function getMockWeatherData(): WeatherData[] {
 export async function getCurrentWeather(
   latitude: number,
   longitude: number
-): Promise<{ temp: number; condition: string; humidity: number } | null> {
+): Promise<{ temp: number; condition: string; humidity: number; pressure: number | null; windSpeed: number; windDeg: number | null; precipitation: number } | null> {
   const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
   
   console.log('OpenWeather API Key status (current):', apiKey ? `Set (length: ${apiKey.length})` : 'NOT SET');
@@ -200,11 +202,45 @@ export async function getCurrentWeather(
     return {
       temp: Math.round(data.main.temp),
       condition: weatherInfo.condition,
-      humidity: data.main.humidity
+      humidity: data.main.humidity,
+      pressure: typeof data.main.pressure === 'number' ? data.main.pressure : null, // hPa
+      windSpeed: Math.round((data.wind?.speed ?? 0) * 10) / 10,                       // m/s
+      windDeg: typeof data.wind?.deg === 'number' ? data.wind.deg : null,             // 0-360°
+      precipitation: Math.round(((data.rain?.['1h'] ?? 0) as number) * 10) / 10,      // mm/h
     };
-    
+
   } catch (error) {
     console.error('Error fetching current weather:', error);
+    return null;
+  }
+}
+
+/**
+ * 気圧傾向を取得（5日3時間予報の直近スロットを比較）。
+ * 近い将来（約6時間）で上昇/下降/横ばいを判定。
+ */
+export async function getPressureTrend(
+  latitude: number,
+  longitude: number
+): Promise<{ trend: 'rising' | 'falling' | 'steady'; deltaHpa: number } | null> {
+  const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
+  if (!apiKey) return null;
+
+  try {
+    const url = `${OPENWEATHER_ENDPOINT}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=ja`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const data: OpenWeatherResponse = await response.json();
+    const list = data.list;
+    if (!list || list.length < 3) return null;
+    const p0 = list[0]?.main?.pressure;
+    const pLater = list[2]?.main?.pressure; // 約6時間後（3hごと × 2）
+    if (typeof p0 !== 'number' || typeof pLater !== 'number') return null;
+    const delta = Math.round(pLater - p0);
+    const trend = delta >= 2 ? 'rising' : delta <= -2 ? 'falling' : 'steady';
+    return { trend, deltaHpa: delta };
+  } catch (error) {
+    console.error('Error fetching pressure trend:', error);
     return null;
   }
 }

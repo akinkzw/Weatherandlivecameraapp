@@ -2,7 +2,7 @@ import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star } from "lucide-react";
+import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star, Gauge, Wind, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
@@ -48,6 +48,12 @@ interface RiverCameraData {
   cameraUrl: string;
   hasCameraUrl: boolean;
   lastUpdated: string;
+}
+
+const WIND_DIRS = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
+function windDirection(deg: number | null | undefined): string {
+  if (typeof deg !== 'number') return '';
+  return WIND_DIRS[Math.round(deg / 22.5) % 16];
 }
 
 export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetailProps) {
@@ -294,7 +300,7 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
           }
           if (data.success && data.current) {
             console.log('✅ Setting current weather');
-            setCurrentWeather(data.current);
+            setCurrentWeather({ ...data.current, pressureTrend: data.pressureTrend });
           }
         } else {
           console.error('Weather API error:', weatherResponse.status);
@@ -393,26 +399,56 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
                   <h3 className="text-slate-900">現在の天気</h3>
                 </div>
                 <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center justify-around gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
                     <div className="flex items-center gap-2">
-                      <Thermometer className="w-5 h-5 text-red-500" />
+                      <Thermometer className="w-5 h-5 text-red-500 flex-shrink-0" />
                       <div>
                         <p className="text-slate-600 text-sm">気温</p>
                         <p className="text-slate-900">{currentWeather.temp}°C</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Cloud className="w-5 h-5 text-slate-500" />
+                      <Cloud className="w-5 h-5 text-slate-500 flex-shrink-0" />
                       <div>
                         <p className="text-slate-600 text-sm">天気</p>
                         <p className="text-slate-900">{currentWeather.condition}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Droplets className="w-5 h-5 text-blue-500" />
+                      <Droplets className="w-5 h-5 text-blue-500 flex-shrink-0" />
                       <div>
                         <p className="text-slate-600 text-sm">湿度</p>
                         <p className="text-slate-900">{currentWeather.humidity}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gauge className="w-5 h-5 text-indigo-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-600 text-sm">気圧</p>
+                        <p className="text-slate-900 flex items-center gap-1">
+                          {typeof currentWeather.pressure === 'number' ? `${currentWeather.pressure} hPa` : '—'}
+                          {currentWeather.pressureTrend?.trend === 'rising' && <ArrowUp className="w-4 h-4 text-red-500" />}
+                          {currentWeather.pressureTrend?.trend === 'falling' && <ArrowDown className="w-4 h-4 text-blue-600" />}
+                          {currentWeather.pressureTrend?.trend === 'steady' && <Minus className="w-4 h-4 text-slate-400" />}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wind className="w-5 h-5 text-cyan-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-600 text-sm">風</p>
+                        <p className="text-slate-900">
+                          {typeof currentWeather.windSpeed === 'number'
+                            ? (currentWeather.windSpeed < 0.5 ? '静穏' : `${currentWeather.windSpeed} m/s ${windDirection(currentWeather.windDeg)}`)
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CloudRain className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-600 text-sm">降水量</p>
+                        <p className="text-slate-900">{typeof currentWeather.precipitation === 'number' ? `${currentWeather.precipitation} mm/h` : '—'}</p>
                       </div>
                     </div>
                   </div>

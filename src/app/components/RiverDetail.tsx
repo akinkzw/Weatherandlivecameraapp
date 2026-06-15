@@ -349,7 +349,9 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
               <MapPin className="w-4 h-4" />
               <span>{river.prefecture}</span>
             </div>
-            <p className="text-slate-500">延長: {river.length}km</p>
+            {river.length > 0 && (
+              <p className="text-slate-500">全長: {river.length}km</p>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {onToggleFavorite && (

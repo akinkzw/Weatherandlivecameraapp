@@ -63,30 +63,49 @@ function PressureSparkline({ series }: { series: number[] }) {
   const min = Math.min(...series);
   const max = Math.max(...series);
   const range = max - min || 1;
-  const points = series
-    .map((p, i) => {
-      const x = pad + (i / (series.length - 1)) * (w - pad * 2);
-      const y = pad + (1 - (p - min) / range) * (h - pad * 2);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
+  const coord = (p: number, i: number) => {
+    const x = pad + (i / (series.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (p - min) / range) * (h - pad * 2);
+    return { x, y, leftPct: (x / w) * 100, topPct: (y / h) * 100 };
+  };
+  const points = series.map((p, i) => { const c = coord(p, i); return `${c.x.toFixed(1)},${c.y.toFixed(1)}`; }).join(' ');
+  const start = coord(series[0], 0);
+  const end = coord(series[series.length - 1], series.length - 1);
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-1">
         <span className="text-slate-600 text-sm">気圧の推移（今後48時間）</span>
         <span className="text-slate-500 text-xs">{min}–{max} hPa</span>
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-10" role="img" aria-label="今後48時間の気圧の推移">
-        <polyline
-          points={points}
-          fill="none"
-          stroke="#0372ac"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
+      <div className="relative w-full h-10">
+        <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="absolute inset-0 w-full h-full" role="img" aria-label="今後48時間の気圧の推移">
+          <polyline
+            points={points}
+            fill="none"
+            stroke="#0372ac"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        {/* 起点（現在） */}
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-slate-400 ring-2 ring-white"
+          style={{ left: `${start.leftPct}%`, top: `${start.topPct}%` }}
+          title={`現在 ${series[0]}hPa`}
         />
-      </svg>
+        {/* 終点（48時間後） */}
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ring-white"
+          style={{ left: `${end.leftPct}%`, top: `${end.topPct}%`, backgroundColor: '#0372ac' }}
+          title={`48時間後 ${series[series.length - 1]}hPa`}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-1 text-xs text-slate-500">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />今 {series[0]}hPa</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#0372ac' }} />48時間後 {series[series.length - 1]}hPa</span>
+      </div>
     </div>
   );
 }

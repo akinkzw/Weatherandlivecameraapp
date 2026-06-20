@@ -780,7 +780,7 @@ async function handler(req: Request): Promise<Response> {
         
         if (!rivers || rivers.length === 0) {
           console.log('⚠️ No rivers found in database');
-          return new Response('川の名前,都府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL\n', {
+          return new Response('川の名前,都道府県,市区町村,水系名称,観測所名称,緯度,経度,規模,DPF観測所ID,水位情報URL\n', {
             headers: {
               'Content-Type': 'text/csv; charset=utf-8',
               'Content-Disposition': 'attachment; filename="rivers_backup.csv"',

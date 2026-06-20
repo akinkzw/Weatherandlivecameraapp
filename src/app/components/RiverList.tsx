@@ -386,14 +386,14 @@ export function RiverList({
           川名で検索すると一覧が表示されます。
         </p>
         <div className="flex flex-col items-center gap-2">
-          <Select value={selectedPrefecture} onValueChange={onSelectPrefecture}>
+          <Select value={selectedPrefecture === 'all' ? '' : selectedPrefecture} onValueChange={onSelectPrefecture}>
             <SelectTrigger
-              aria-label="都道府県から探す"
+              aria-label="都道府県を選択"
               className="h-12 w-[260px] rounded-xl bg-white border border-slate-200 shadow-sm pl-2.5 pr-3 text-sm text-slate-700 gap-2.5 hover:border-[#0372ac]/40 focus:ring-2 focus:ring-[#0372ac]/30 transition-colors"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               <IconChip><MapPin className="size-4" style={{ color: '#0372ac' }} /></IconChip>
-              <SelectValue placeholder="都道府県から探す" />
+              <SelectValue placeholder="都道府県を選択" />
             </SelectTrigger>
             <SelectContent className="max-h-80">
               {allPrefectures.map(({ prefecture, count }) => (

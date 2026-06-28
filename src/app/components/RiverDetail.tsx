@@ -2,6 +2,7 @@ import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
+import { Skeleton } from './ui/skeleton';
 import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star, Gauge, Wind, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -110,6 +111,43 @@ function PressureSparkline({ series }: { series: number[] }) {
   );
 }
 
+// 天気取得中のプレースホルダー。最終レイアウトと同じ骨格にしてレイアウトジャンプを防ぐ。
+function WeatherSkeleton() {
+  return (
+    <div>
+      {/* 現在の天気プレースホルダー */}
+      <div className="mb-6 pb-6 border-b border-slate-200">
+        <Skeleton className="h-5 w-28 mb-3" />
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="w-5 h-5 rounded-full flex-shrink-0" />
+                <div className="flex-1">
+                  <Skeleton className="h-3 w-12 mb-1" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-10 w-full mt-4" />
+        </div>
+      </div>
+      {/* 予報プレースホルダー（4枚） */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-slate-50 rounded-lg p-4 text-center">
+            <Skeleton className="h-3 w-10 mx-auto mb-2" />
+            <Skeleton className="h-8 w-8 rounded-full mx-auto mb-3" />
+            <Skeleton className="h-4 w-14 mx-auto mb-2" />
+            <Skeleton className="h-3 w-10 mx-auto" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetailProps) {
   const [observationStations, setObservationStations] = useState<ObservationStation[]>([]);
   const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
@@ -120,6 +158,11 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
   const [yesterday, setYesterday] = useState<any>(null);
   const [realtimeWaterLevel, setRealtimeWaterLevel] = useState<any>(null);
   const [loadingWaterLevel, setLoadingWaterLevel] = useState(false);
+  // 天気取得中フラグ。座標がある時だけ true で開始（座標なしの川で永遠にスケルトンにならない）。
+  // 所有者は fetchWeatherData(/weather) のみ。観測所 effect(DPF) はこのフラグを触らない。
+  const [loadingWeather, setLoadingWeather] = useState<boolean>(
+    () => !!(river.latitude && river.longitude)
+  );
 
   // 🔍 デバッグ: 利用可能なデータを確認
   useEffect(() => {
@@ -274,6 +317,7 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             if (data.source) {
               setDataSource(data.source);
             }
+            // 注: ここは DPF 経由の補助的なセット。loadingWeather は管理しない（所有は /weather effect）。
             if (data.weather && data.weather.length > 0) {
               setApiWeather(data.weather);
             }
@@ -326,9 +370,11 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
     const fetchWeatherData = async () => {
       if (!river.latitude || !river.longitude) {
         console.log('No coordinates available for weather fetch');
+        setLoadingWeather(false);
         return;
       }
-      
+
+      setLoadingWeather(true);
       try {
         console.log(`Fetching weather for ${river.name} at ${river.latitude}, ${river.longitude}`);
         
@@ -367,6 +413,8 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
         }
       } catch (error) {
         console.error('天気データの取得に失敗:', error);
+      } finally {
+        setLoadingWeather(false);
       }
     };
 
@@ -379,14 +427,10 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
   // 近隣ライブカメラ（静的同梱データ・1km以内・出典: 川の防災情報）
   const nearbyCamera = getRiverCamera(river.id);
   
-  // 天気データ（APIからの取得を優先、なければデフォルト）
-  const weather = apiWeather.length > 0 ? apiWeather : 
-    (river.weather && river.weather.length > 0) ? river.weather : [
-      { date: '今日', temp: 14, condition: '晴れ', precipitation: 0, icon: 'sun' },
-      { date: '明日', temp: 16, condition: '曇り', precipitation: 0, icon: 'cloud' },
-      { date: '明後日', temp: 13, condition: '雨', precipitation: 8, icon: 'rain' },
-      { date: '3日後', temp: 11, condition: '曇り', precipitation: 2, icon: 'cloud' }
-    ];
+  // 天気データ（API優先 → レコード保存値 → 空。ダミーは使わない）
+  const weather = apiWeather.length > 0 ? apiWeather
+    : (river.weather && river.weather.length > 0) ? river.weather
+    : [];
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('晴')) return '☀️';
@@ -451,6 +495,10 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
 
         <TabsContent value="weather" className="mt-4">
           <Card className="p-6">
+            {loadingWeather ? (
+              <WeatherSkeleton />
+            ) : (
+            <>
             {/* 現在の天気 */}
             {currentWeather && (
               <div className="mb-6 pb-6 border-b border-slate-200">
@@ -520,6 +568,7 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             )}
             
             {/* 予報 */}
+            {weather.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* 前日（実績）：釣り人向けに昨日の実降水量(mm)を表示 */}
               {yesterday && (
@@ -554,6 +603,15 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
                 </div>
               ))}
             </div>
+            ) : (
+              !currentWeather && (
+                <div className="text-center py-8 text-slate-500">
+                  天気情報を取得できませんでした
+                </div>
+              )
+            )}
+            </>
+            )}
           </Card>
         </TabsContent>
 

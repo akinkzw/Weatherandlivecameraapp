@@ -31,3 +31,10 @@ npm-debug.log*
 
 # Data backups
 backups/
+
+# River data working files (local-only, reused for future river additions)
+convert_to_prod_format.py
+fetch_river_coords.py
+merge_rivers.py
+rivers_chubu_*.csv
+rivers_backup_*.csv

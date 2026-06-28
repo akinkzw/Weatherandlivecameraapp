@@ -746,6 +746,10 @@ async function handler(req: Request): Promise<Response> {
     if (path === '/make-server-5f24a873/rivers/bulk' && method === 'POST') {
       const body = await req.json();
       const result = await addRiversBulk(body.rivers);
+      // 1件以上が新規登録された場合のみスナップショットを無効化（次回 /rivers で再構築）
+      if (result?.success && (result.stats?.success ?? 0) > 0) {
+        await invalidateRiversSnapshot();
+      }
       return jsonResponse(result);
     }
 

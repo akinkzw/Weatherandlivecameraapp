@@ -163,6 +163,10 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
   const [loadingWeather, setLoadingWeather] = useState<boolean>(
     () => !!(river.latitude && river.longitude)
   );
+  // 前日実績の取得中フラグ。/weather-yesterday を別系統で叩く（メインパネルはブロックしない）。
+  const [loadingYesterday, setLoadingYesterday] = useState<boolean>(
+    () => !!(river.latitude && river.longitude)
+  );
 
   // 🔍 デバッグ: 利用可能なデータを確認
   useEffect(() => {
@@ -403,9 +407,6 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             console.log('✅ Setting current weather');
             setCurrentWeather({ ...data.current, pressureTrend: data.pressureTrend });
           }
-          if (data.yesterday) {
-            setYesterday(data.yesterday);
-          }
         } else {
           console.error('Weather API error:', weatherResponse.status);
           const errorText = await weatherResponse.text();
@@ -420,6 +421,32 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
 
     fetchWeatherData();
   }, [river.latitude, river.longitude, river.name]);
+
+  // 前日実績を /weather-yesterday から後追い取得（プログレッシブ表示）
+  useEffect(() => {
+    const fetchYesterday = async () => {
+      if (!river.latitude || !river.longitude) {
+        setLoadingYesterday(false);
+        return;
+      }
+      setLoadingYesterday(true);
+      try {
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-5f24a873/weather-yesterday?lat=${river.latitude}&lon=${river.longitude}`,
+          { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.yesterday) setYesterday(data.yesterday);
+        }
+      } catch (error) {
+        console.error('前日実績の取得に失敗:', error);
+      } finally {
+        setLoadingYesterday(false);
+      }
+    };
+    fetchYesterday();
+  }, [river.latitude, river.longitude]);
   
   // 国土交通省の川の防災情報からカメラデータを取得
   const nationalCameras = getRiverCameras(river.name);
@@ -570,8 +597,15 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
             {/* 予報 */}
             {weather.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* 前日（実績）：釣り人向けに昨日の実降水量(mm)を表示 */}
-              {yesterday && (
+              {/* 前日（実績）：取得中はミニスケルトン、失敗/無しは非表示。セルは常に4枚 */}
+              {loadingYesterday ? (
+                <div className="bg-amber-50 rounded-lg p-4 text-center ring-1 ring-amber-200">
+                  <Skeleton className="h-3 w-10 mx-auto mb-2" />
+                  <Skeleton className="h-8 w-8 rounded-full mx-auto mb-3" />
+                  <Skeleton className="h-4 w-16 mx-auto mb-2" />
+                  <Skeleton className="h-3 w-10 mx-auto" />
+                </div>
+              ) : yesterday ? (
                 <div className="bg-amber-50 rounded-lg p-4 text-center ring-1 ring-amber-200">
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Calendar className="w-3 h-3 text-amber-600" />
@@ -585,9 +619,9 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
                     <span className="text-slate-600">{yesterday.precipitation}mm</span>
                   </div>
                 </div>
-              )}
-              {/* 予報：前日を出す場合は枚数を合わせて直近3日に絞る */}
-              {(yesterday ? weather.slice(0, 3) : weather).map((day, index) => (
+              ) : null}
+              {/* 予報：前日枠がある（取得中 or 取得済み）場合は直近3日に絞る */}
+              {((loadingYesterday || yesterday) ? weather.slice(0, 3) : weather).map((day, index) => (
                 <div key={index} className="bg-slate-50 rounded-lg p-4 text-center">
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Calendar className="w-3 h-3 text-slate-500" />

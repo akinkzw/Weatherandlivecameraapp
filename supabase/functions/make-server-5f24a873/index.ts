@@ -1153,27 +1153,38 @@ async function handler(req: Request): Promise<Response> {
       
       console.log(`🌤️ Weather request for lat: ${lat}, lon: ${lon}`);
       
-      // A: 独立した3系統を並列取得（allSettled で1つ失敗しても他は返す）。
-      // B: forecast と気圧トレンドは getForecastWithPressure が単一の /forecast 取得から導出。
-      const [yesterdayRes, currentRes, forecastRes] = await Promise.allSettled([
-        getYesterdayWeatherFromOpenMeteo(lat, lon),
+      // current/forecast/気圧のみ並列取得（前日実績は遅く不安定なので /weather-yesterday に分離）。
+      const [currentRes, forecastRes] = await Promise.allSettled([
         getCurrentWeather(lat, lon),
         getForecastWithPressure(lat, lon),
       ]);
 
-      const yesterday = yesterdayRes.status === 'fulfilled' ? yesterdayRes.value : null;
       const current = currentRes.status === 'fulfilled' ? currentRes.value : null;
       const forecast = forecastRes.status === 'fulfilled' ? forecastRes.value.forecast : [];
       const pressureTrend = forecastRes.status === 'fulfilled' ? forecastRes.value.pressureTrend : null;
 
-      if (yesterdayRes.status === 'rejected') console.error('❌ yesterday weather failed:', yesterdayRes.reason);
       if (currentRes.status === 'rejected') console.error('❌ current weather failed:', currentRes.reason);
       if (forecastRes.status === 'rejected') console.error('❌ forecast/pressure failed:', forecastRes.reason);
 
-      console.log('📊 Final - Yesterday:', yesterday ? 'OK' : 'NULL',
-        ', Forecast:', forecast.length, 'days, Pressure:', pressureTrend ? pressureTrend.trend : 'NULL');
+      console.log('📊 Final - Forecast:', forecast.length, 'days, Pressure:', pressureTrend ? pressureTrend.trend : 'NULL');
 
-      return jsonResponse({ success: true, yesterday, current, forecast, pressureTrend });
+      return jsonResponse({ success: true, current, forecast, pressureTrend });
+    }
+
+    // 前日実績（Open-Meteo archive）。/weather から分離してプログレッシブ表示する。
+    if (path === '/make-server-5f24a873/weather-yesterday' && method === 'GET') {
+      const lat = parseFloat(url.searchParams.get('lat') || '0');
+      const lon = parseFloat(url.searchParams.get('lon') || '0');
+      if (!lat || !lon) {
+        return jsonResponse({ success: false, error: 'Missing lat/lon' }, 400);
+      }
+      let yesterday = null;
+      try {
+        yesterday = await getYesterdayWeatherFromOpenMeteo(lat, lon);
+      } catch (error) {
+        console.error('❌ yesterday weather failed:', error);
+      }
+      return jsonResponse({ success: true, yesterday });
     }
 
     // DPF観��所情報

@@ -3,14 +3,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
-import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star, Gauge, Wind, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { Camera, MapPin, Droplet, CloudRain, Calendar, X, Droplets, Thermometer, Cloud, Video, ExternalLink, Shield, AlertCircle, Star, Gauge, Wind, ArrowUp, ArrowDown, Minus, Moon } from "lucide-react";
 import { River } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getRiverCameras, getUpdatedCameraUrl } from '../utils/riverCameras';
 import { getRiverCamera, CAMERA_SOURCE } from '../utils/cameraProximity';
 import { getPrefectureCameraUrl } from '../utils/prefectureLinks';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import * as SunCalc from 'suncalc';
 
 interface RiverDetailProps {
   river: River;
@@ -148,6 +149,48 @@ function WeatherSkeleton() {
   );
 }
 
+// UTC基準の暦日ズレ緩和：日本時間の暦日の「正午(JST)」を基準時刻にする。
+// JST正午 = UTC 03:00。月相・月の出入りの基準日を安定させる。
+function jstNoonRef(now: Date = new Date()): Date {
+  const p = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(now);
+  const y = Number(p.find((x) => x.type === 'year')!.value);
+  const mo = Number(p.find((x) => x.type === 'month')!.value);
+  const d = Number(p.find((x) => x.type === 'day')!.value);
+  return new Date(Date.UTC(y, mo - 1, d, 3, 0, 0)); // 12:00 JST の絶対時刻
+}
+
+// SunCalc の phase(0=新月,0.25=上弦,0.5=満月,0.75=下弦) → 日本語月相名（8区分）
+function moonPhaseName(phase: number): string {
+  const bins: Array<[number, string]> = [
+    [0.0625, '新月'], [0.1875, '三日月'], [0.3125, '上弦の月'], [0.4375, '十三夜'],
+    [0.5625, '満月'], [0.6875, '寝待月'], [0.8125, '下弦の月'], [0.9375, '有明月'],
+  ];
+  for (const [t, name] of bins) if (phase < t) return name;
+  return '新月'; // phase>=0.9375 は新月へ戻る
+}
+
+// 満ち欠けSVG：影=slate-700 / 明部=slate-200 / 輪郭=slate-300。
+// fraction(0=新月,1=満月) と waxing(満ちる/欠ける) を反映し、ターミネータ半楕円で連続表現。
+function MoonPhaseIcon({ fraction, waxing, size = 28 }: { fraction: number; waxing: boolean; size?: number }) {
+  const f = Math.min(Math.max(fraction, 0), 1);
+  const c = 50, r = 48;
+  const a = r * (1 - 2 * f);          // ターミネータ半楕円の横半径（符号付き：f<0.5で正）
+  const rx = Math.abs(a);
+  const outerSweep = waxing ? 1 : 0;                       // 明側外周（waxing=右 / waning=左）
+  // ターミネータ半楕円の側：waxingの三日月(a>0)は右半(sweep0)/凸月(a<0)は左半(sweep1)。waningは左右反転。
+  const termSweep = waxing ? (a > 0 ? 0 : 1) : (a > 0 ? 1 : 0);
+  const d = `M ${c},${c - r} A ${r} ${r} 0 0 ${outerSweep} ${c},${c + r} A ${rx} ${r} 0 0 ${termSweep} ${c},${c - r} Z`;
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} role="img" aria-label="月の満ち欠け">
+      <circle cx={c} cy={c} r={r} fill="#334155" />
+      {f > 0.005 && <path d={d} fill="#e2e8f0" />}
+      <circle cx={c} cy={c} r={r} fill="none" stroke="#cbd5e1" strokeWidth="2" />
+    </svg>
+  );
+}
+
 export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetailProps) {
   const [observationStations, setObservationStations] = useState<ObservationStation[]>([]);
   const [apiCameras, setApiCameras] = useState<RiverCameraData[]>([]);
@@ -212,7 +255,30 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
   };
   
   const hasDummyData = isDummyWaterLevel();
-  
+
+  // 月齢・月相・月の出入り（座標から即時計算。JST正午を基準にUTCズレを緩和）
+  const moon = useMemo(() => {
+    const ref = jstNoonRef();
+    const illum = SunCalc.getMoonIllumination(ref);
+    const fmt = (dt: Date | null | undefined) =>
+      dt ? dt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' }) : '—';
+    const hasCoords = typeof river.latitude === 'number' && typeof river.longitude === 'number';
+    let rise = '—', set = '—', special = '';
+    if (hasCoords) {
+      const t = SunCalc.getMoonTimes(ref, river.latitude as number, river.longitude as number);
+      if (t.alwaysUp) special = '終日地平線上（出入りなし）';
+      else if (t.alwaysDown) special = '終日地平線下（出入りなし）';
+      else { rise = fmt(t.rise); set = fmt(t.set); }
+    }
+    return {
+      name: moonPhaseName(illum.phase),
+      waxing: illum.phase <= 0.5,
+      fraction: illum.fraction,
+      age: Number((illum.phase * 29.530588853).toFixed(1)),
+      hasCoords, rise, set, special,
+    };
+  }, [river.id, river.latitude, river.longitude]);
+
   // 水位パーセンテージの計算（ダミーデータの場合は0にする）
   const waterLevelPercentage = hasDummyData ? 0 : (river.waterLevel / river.warningLevel) * 100;
 
@@ -522,6 +588,45 @@ export function RiverDetail({ river, isFavorite, onToggleFavorite }: RiverDetail
 
         <TabsContent value="weather" className="mt-4">
           <Card className="p-6">
+            {/* 月齢（渓流釣り向け・座標から即時計算。天気取得を待たない） */}
+            <div className="mb-6 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Moon className="w-5 h-5 text-indigo-500" />
+                <h3 className="text-slate-900">月齢</h3>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center gap-4">
+                  <MoonPhaseIcon fraction={moon.fraction} waxing={moon.waxing} size={32} />
+                  <div>
+                    <p className="text-slate-900">{moon.name}</p>
+                    <p className="text-slate-600 text-sm">
+                      月齢 {moon.age}（照度 {Math.round(moon.fraction * 100)}%）
+                    </p>
+                  </div>
+                </div>
+                {moon.special ? (
+                  <p className="text-slate-700 text-sm mt-4">{moon.special}</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <div className="flex items-center gap-2">
+                      <ArrowUp className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-600 text-sm">月の出</p>
+                        <p className="text-slate-900">{moon.hasCoords ? moon.rise : '位置情報なし'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ArrowDown className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-600 text-sm">月の入り</p>
+                        <p className="text-slate-900">{moon.hasCoords ? moon.set : '位置情報なし'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {loadingWeather ? (
               <WeatherSkeleton />
             ) : (

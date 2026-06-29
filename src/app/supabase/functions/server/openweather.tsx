@@ -55,6 +55,52 @@ function mapWeatherIcon(iconCode: string): { condition: string; icon: string } {
   return mapping[code] || { condition: '晴れ', icon: 'sun' };
 }
 
+// 予報レスポンスから日別予報を構築（fetch を持たない純関数）。
+// getWeatherForecast と getForecastWithPressure で共有。
+function buildDailyForecasts(data: OpenWeatherResponse): WeatherData[] {
+  const dailyForecasts: WeatherData[] = [];
+  const processedDates = new Set<string>();
+  for (const item of data.list) {
+    const date = new Date(item.dt * 1000);
+    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hour = date.getHours();
+    if (hour >= 11 && hour <= 13 && !processedDates.has(dateKey)) {
+      const weatherInfo = mapWeatherIcon(item.weather[0].icon);
+      const dayLabel = getDayLabel(date);
+      dailyForecasts.push({
+        date: dayLabel,
+        temp: Math.round(item.main.temp),
+        condition: weatherInfo.condition,
+        precipitation: Math.round(item.pop * 100), // Convert to percentage
+        icon: weatherInfo.icon,
+        humidity: item.main.humidity,
+        windSpeed: Math.round(item.wind.speed * 10) / 10,
+      });
+      processedDates.add(dateKey);
+      if (dailyForecasts.length >= 4) break; // 4日分取得したら終了
+    }
+  }
+  return dailyForecasts;
+}
+
+// 気圧系列とトレンドを予報リストから導出（fetch を持たない純関数）。
+// 旧 getPressureTrend と getForecastWithPressure が共有 → 結果の同一性を保証。
+type PressureTrendResult = { trend: 'rising' | 'falling' | 'steady'; deltaHpa: number; series: number[] };
+function derivePressureTrend(
+  list: OpenWeatherResponse['list'] | undefined
+): PressureTrendResult | null {
+  if (!list || list.length < 3) return null;
+  // 今後48時間の気圧系列（3時間ごと、最大16点）。スパークライン描画用。
+  const series = list
+    .slice(0, 16)
+    .map((it) => it?.main?.pressure)
+    .filter((p): p is number => typeof p === 'number');
+  if (series.length < 2) return null;
+  const delta = Math.round(series[Math.min(2, series.length - 1)] - series[0]); // 約6時間後との差
+  const trend = delta >= 2 ? 'rising' : delta <= -2 ? 'falling' : 'steady';
+  return { trend, deltaHpa: delta, series };
+}
+
 /**
  * 緯度経度から5日間の天気予報を取得
  */
@@ -94,38 +140,8 @@ export async function getWeatherForecast(
     }
     
     // 1日1つのデータに集約（正午のデータを使用）
-    const dailyForecasts: WeatherData[] = [];
-    const processedDates = new Set<string>();
-    
-    for (const item of data.list) {
-      const date = new Date(item.dt * 1000);
-      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      // 正午（12時）前後のデータを優先
-      const hour = date.getHours();
-      if (hour >= 11 && hour <= 13 && !processedDates.has(dateKey)) {
-        const weatherInfo = mapWeatherIcon(item.weather[0].icon);
-        const dayLabel = getDayLabel(date);
-        
-        dailyForecasts.push({
-          date: dayLabel,
-          temp: Math.round(item.main.temp),
-          condition: weatherInfo.condition,
-          precipitation: Math.round(item.pop * 100), // Convert to percentage
-          icon: weatherInfo.icon,
-          humidity: item.main.humidity,
-          windSpeed: Math.round(item.wind.speed * 10) / 10
-        });
-        
-        processedDates.add(dateKey);
-        
-        // 4日分取得したら終了
-        if (dailyForecasts.length >= 4) {
-          break;
-        }
-      }
-    }
-    
+    const dailyForecasts = buildDailyForecasts(data);
+
     console.log(`Fetched ${dailyForecasts.length} daily forecasts`);
     return dailyForecasts.length > 0 ? dailyForecasts : getMockWeatherData();
     
@@ -231,20 +247,49 @@ export async function getPressureTrend(
     const response = await fetch(url);
     if (!response.ok) return null;
     const data: OpenWeatherResponse = await response.json();
-    const list = data.list;
-    if (!list || list.length < 3) return null;
-    // 今後48時間の気圧系列（3時間ごと、最大16点）。スパークライン描画用。
-    const series = list
-      .slice(0, 16)
-      .map((it) => it?.main?.pressure)
-      .filter((p): p is number => typeof p === 'number');
-    if (series.length < 2) return null;
-    const delta = Math.round(series[Math.min(2, series.length - 1)] - series[0]); // 約6時間後との差
-    const trend = delta >= 2 ? 'rising' : delta <= -2 ? 'falling' : 'steady';
-    return { trend, deltaHpa: delta, series };
+    return derivePressureTrend(data.list);
   } catch (error) {
     console.error('Error fetching pressure trend:', error);
     return null;
+  }
+}
+
+/**
+ * /forecast を1回だけ取得し、日別予報と気圧トレンドの両方を導出する。
+ * 旧 getWeatherForecast + getPressureTrend の重複 fetch を1回に統合。
+ */
+export async function getForecastWithPressure(
+  latitude: number,
+  longitude: number
+): Promise<{ forecast: WeatherData[]; pressureTrend: PressureTrendResult | null }> {
+  const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
+  if (!apiKey) {
+    console.warn('OPENWEATHER_API_KEY is not set, returning mock forecast');
+    return { forecast: getMockWeatherData(), pressureTrend: null };
+  }
+  try {
+    const url = `${OPENWEATHER_ENDPOINT}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=ja`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenWeather API error: ${response.status}`, errorText);
+      return { forecast: getMockWeatherData(), pressureTrend: null };
+    }
+    let data: OpenWeatherResponse;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse OpenWeather API response:', jsonError);
+      return { forecast: getMockWeatherData(), pressureTrend: null };
+    }
+    const dailyForecasts = buildDailyForecasts(data);
+    return {
+      forecast: dailyForecasts.length > 0 ? dailyForecasts : getMockWeatherData(),
+      pressureTrend: derivePressureTrend(data.list),
+    };
+  } catch (error) {
+    console.error('Error fetching forecast with pressure:', error);
+    return { forecast: getMockWeatherData(), pressureTrend: null };
   }
 }
 

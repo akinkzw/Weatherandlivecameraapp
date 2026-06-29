@@ -8,7 +8,7 @@ import {
   extractCameraInfo,
   type RiverObservationMetadata 
 } from './dpf_graphql.tsx';
-import { getWeatherForecast, getCurrentWeather, getPressureTrend } from './openweather.tsx';
+import { getCurrentWeather, getForecastWithPressure } from './openweather.tsx';
 import { getYesterdayWeather } from './weatherapi.tsx';
 import { getYesterdayWeatherFromOpenMeteo } from './openmeteo.tsx';
 import { estimateRiverStatusFromRainfall, detectRiverScale } from './rainfall_estimator.tsx';
@@ -1153,47 +1153,25 @@ async function handler(req: Request): Promise<Response> {
       
       console.log(`🌤️ Weather request for lat: ${lat}, lon: ${lon}`);
       
-      let yesterday = null;
-      let current = null;
-      let forecast = [];
-      
-      // Open-Meteoで昨日の天気を取得（完全無料、APIキー不要）
-      try {
-        console.log('📡 Fetching yesterday weather from Open-Meteo...');
-        yesterday = await getYesterdayWeatherFromOpenMeteo(lat, lon);
-        console.log('✅ Yesterday weather:', yesterday ? 'OK' : 'NULL');
-      } catch (error) {
-        console.error('❌ Error fetching yesterday weather:', error);
-      }
-      
-      try {
-        console.log('📡 Fetching current weather...');
-        current = await getCurrentWeather(lat, lon);
-        console.log('✅ Current weather:', current ? 'OK' : 'NULL');
-      } catch (error) {
-        console.error('❌ Error fetching current weather:', error);
-      }
-      
-      try {
-        console.log('📡 Fetching forecast...');
-        forecast = await getWeatherForecast(lat, lon);
-        console.log('✅ Forecast:', forecast ? `${forecast.length} days` : 'NULL');
-      } catch (error) {
-        console.error('❌ Error fetching forecast:', error);
-      }
-      
-      console.log('📊 Final data - Yesterday:', yesterday ? 'OK' : 'NULL', ', Forecast:', forecast.length, 'days');
-      if (forecast.length > 0) {
-        console.log('📊 First forecast item:', forecast[0]);
-      }
-      
-      let pressureTrend = null;
-      try {
-        pressureTrend = await getPressureTrend(lat, lon);
-        console.log('✅ Pressure trend:', pressureTrend ? pressureTrend.trend : 'NULL');
-      } catch (error) {
-        console.error('❌ Error fetching pressure trend:', error);
-      }
+      // A: 独立した3系統を並列取得（allSettled で1つ失敗しても他は返す）。
+      // B: forecast と気圧トレンドは getForecastWithPressure が単一の /forecast 取得から導出。
+      const [yesterdayRes, currentRes, forecastRes] = await Promise.allSettled([
+        getYesterdayWeatherFromOpenMeteo(lat, lon),
+        getCurrentWeather(lat, lon),
+        getForecastWithPressure(lat, lon),
+      ]);
+
+      const yesterday = yesterdayRes.status === 'fulfilled' ? yesterdayRes.value : null;
+      const current = currentRes.status === 'fulfilled' ? currentRes.value : null;
+      const forecast = forecastRes.status === 'fulfilled' ? forecastRes.value.forecast : [];
+      const pressureTrend = forecastRes.status === 'fulfilled' ? forecastRes.value.pressureTrend : null;
+
+      if (yesterdayRes.status === 'rejected') console.error('❌ yesterday weather failed:', yesterdayRes.reason);
+      if (currentRes.status === 'rejected') console.error('❌ current weather failed:', currentRes.reason);
+      if (forecastRes.status === 'rejected') console.error('❌ forecast/pressure failed:', forecastRes.reason);
+
+      console.log('📊 Final - Yesterday:', yesterday ? 'OK' : 'NULL',
+        ', Forecast:', forecast.length, 'days, Pressure:', pressureTrend ? pressureTrend.trend : 'NULL');
 
       return jsonResponse({ success: true, yesterday, current, forecast, pressureTrend });
     }

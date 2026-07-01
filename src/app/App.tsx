@@ -31,6 +31,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Search, ArrowUp, X } from 'lucide-react';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 import { projectId, publicAnonKey } from './utils/supabase/info';
+import { supabase } from './utils/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 import { toast, Toaster } from 'sonner@2.0.3';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -120,6 +122,8 @@ function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  // 認証セッション（この段階では保持のみ。UIは Step 2、お気に入り連携は Step 3〜）
+  const [session, setSession] = useState<Session | null>(null);
   
   // 都道府県セクションへの参照
   const prefecturesSectionRef = useRef<HTMLDivElement>(null);
@@ -132,6 +136,16 @@ function App() {
   if (testMode) {
     console.log('Test mode:', testMode);
   }
+
+  // 認証セッションの購読。初回に現在のセッションを取得し、以後の変化を追跡する。
+  // Magic Link のコールバックは client の detectSessionInUrl が処理する。
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // 川のデータを取得
   useEffect(() => {

@@ -4,6 +4,7 @@ import { ServerHealthCheck } from './components/ServerHealthCheck';
 import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
+import { AuthMenu } from './components/AuthMenu';
 import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
 import { getFavoriteRivers, toggleFavoriteRiver, type FavoriteRiver } from './utils/favoriteRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
@@ -717,9 +718,12 @@ function App() {
           {/* Header Content */}
           <div className="relative py-6">
             <div 
-              className="container mx-auto px-4" 
+              className="container mx-auto px-4"
               onClick={(e) => e.stopPropagation()}
             >
+              <div className="flex justify-end mb-3">
+                <AuthMenu session={session} />
+              </div>
               <div className="flex gap-4 flex-wrap max-w-3xl">
                 <div className="w-full max-w-xs relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />

@@ -772,7 +772,7 @@ function App() {
           
           <div className="max-w-4xl mx-auto">
             {/* Region Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Button
                 variant="ghost"
                 onClick={() => handleAreaClick('hokkaido-tohoku')}
@@ -780,7 +780,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>北海道・東北地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>北海道/青森/岩手/宮城/秋田/山形/福島</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>北海道/青森/岩手/宮城/秋田/山形/福島</div>
                 </div>
               </Button>
 
@@ -791,7 +791,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>関東地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>茨城/栃木/群馬/埼玉/千葉/東京/神奈川</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>茨城/栃木/群馬/埼玉/千葉/東京/神奈川</div>
                 </div>
               </Button>
 
@@ -802,7 +802,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>甲信越・北陸地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>山梨/新潟/長野/富山/石川/福井</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>山梨/新潟/長野/富山/石川/福井</div>
                 </div>
               </Button>
 
@@ -813,7 +813,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>東海地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>愛知/岐阜/静岡/三重</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>愛知/岐阜/静岡/三重</div>
                 </div>
               </Button>
 
@@ -824,7 +824,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>関西地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>滋賀/京都/大阪/兵庫/奈良/和歌山</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>滋賀/京都/大阪/兵庫/奈良/和歌山</div>
                 </div>
               </Button>
 
@@ -835,7 +835,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>中国地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>鳥取/島根/岡山/広島/山口</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>鳥取/島根/岡山/広島/山口</div>
                 </div>
               </Button>
 
@@ -846,7 +846,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>四国地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>徳島/香川/愛媛/高知</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>徳島/香川/愛媛/高知</div>
                 </div>
               </Button>
 
@@ -857,7 +857,7 @@ function App() {
               >
                 <div className="w-full">
                   <div className="font-semibold mb-2" style={{ color: '#204670' }}>九州・沖縄地方</div>
-                  <div className="text-xs opacity-70 leading-relaxed" style={{ color: '#0372ac' }}>福岡/佐賀/長崎/熊本/大分/宮崎/鹿児島/沖縄</div>
+                  <div className="text-xs opacity-70 leading-relaxed whitespace-normal break-words" style={{ color: '#0372ac' }}>福岡/佐賀/長崎/熊本/大分/宮崎/鹿児島/沖縄</div>
                 </div>
               </Button>
             </div>

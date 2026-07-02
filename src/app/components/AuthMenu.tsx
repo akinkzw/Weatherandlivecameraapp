@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import { LogIn, LogOut, Mail } from 'lucide-react';
+import { LogIn, Mail, User } from 'lucide-react';
 
 export function AuthMenu({ session }: { session: Session | null }) {
   const [open, setOpen] = useState(false);
@@ -30,26 +30,18 @@ export function AuthMenu({ session }: { session: Session | null }) {
     }
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  // ログイン済み：メール（省略表示）＋ログアウト
+  // ログイン済み：マイページへの入口（ログアウトはマイページに集約）
   if (session?.user) {
-    const addr = session.user.email ?? '';
     return (
-      <div className="flex items-center gap-2">
-        <span
-          className="text-sm text-slate-700 bg-white/80 rounded-full px-3 py-1 max-w-[160px] truncate"
-          title={addr}
-        >
-          {addr}
-        </span>
-        <Button variant="outline" size="sm" onClick={logout} className="bg-white/90">
-          <LogOut className="w-4 h-4 mr-1" />
-          ログアウト
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => { window.location.href = '/?page=mypage'; }}
+        className="bg-white/90"
+      >
+        <User className="w-4 h-4 mr-1" />
+        マイページ
+      </Button>
     );
   }
 

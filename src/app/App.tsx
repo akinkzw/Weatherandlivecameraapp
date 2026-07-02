@@ -5,6 +5,7 @@ import { DirectDbUpdater } from './components/DirectDbUpdater';
 import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { AuthMenu } from './components/AuthMenu';
+import { MyPage } from './components/MyPage';
 import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
 import { getFavoriteIds, addFavorite, removeFavorite, mergeLocalFavoritesToServer, type FavoriteRiver } from './utils/favoriteRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
@@ -171,6 +172,7 @@ function App() {
   // URLパラメータからテストモードを確認
   const urlParams = new URLSearchParams(window.location.search);
   const testMode = urlParams.get('test');
+  const page = urlParams.get('page');
 
   // デバッグ用（テストモード時のみ）
   if (testMode) {
@@ -387,6 +389,19 @@ function App() {
   }
 
   // テストモードの場合はテストコンポーネントを表示
+  if (page === 'mypage') {
+    return (
+      <MyPage
+        session={session}
+        rivers={rivers}
+        favorites={favorites}
+        favoriteIdSet={favoriteIdSet}
+        onToggleFavorite={handleToggleFavorite}
+        isLoadingRivers={isLoadingRivers}
+      />
+    );
+  }
+
   if (testMode === 'camera') {
     return <CameraTest />;
   }

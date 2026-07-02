@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SimpleDpfIdTest } from './components/SimpleDpfIdTest';
 import { ServerHealthCheck } from './components/ServerHealthCheck';
 import { DirectDbUpdater } from './components/DirectDbUpdater';
@@ -6,7 +6,7 @@ import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { AuthMenu } from './components/AuthMenu';
 import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
-import { getFavoriteRivers, toggleFavoriteRiver, type FavoriteRiver } from './utils/favoriteRivers';
+import { getFavoriteIds, addFavorite, removeFavorite, type FavoriteRiver } from './utils/favoriteRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
@@ -109,16 +109,47 @@ function App() {
   const [rivers, setRivers] = useState<River[]>([])
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
   const [recentRivers, setRecentRivers] = useState<RecentRiver[]>(() => getRecentRivers());
-  const [favorites, setFavorites] = useState<FavoriteRiver[]>(() => getFavoriteRivers());
-  const favoriteIds = new Set(favorites.map((f) => f.id));
-  const handleToggleFavorite = (river: FavoriteRiver) => {
-    setFavorites(toggleFavoriteRiver({
-      id: river.id,
-      name: river.name,
-      prefecture: river.prefecture,
-      currentStatus: river.currentStatus,
-      observatoryName: river.observatoryName,
-    }));
+  // お気に入りは river_id の配列で保持（サーバ=created_at降順 / localStorage=保存順）
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const favoriteIdSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+
+  // 表示用オブジェクトは rivers[] から id で解決（削除済みの川は自動除外・順序は id 配列を踏襲）
+  const riverById = useMemo(() => new Map(rivers.map((r) => [r.id, r])), [rivers]);
+  const favorites: FavoriteRiver[] = useMemo(
+    () =>
+      favoriteIds
+        .map((id) => riverById.get(id))
+        .filter((r): r is River => !!r)
+        .map((r) => ({
+          id: r.id,
+          name: r.name,
+          prefecture: r.prefecture,
+          currentStatus: r.currentStatus,
+          observatoryName: r.observatoryName,
+        })),
+    [favoriteIds, riverById]
+  );
+
+  // セッション変化（ログイン/ログアウト）で再取得。未ログイン時は localStorage を読む。
+  useEffect(() => {
+    let active = true;
+    getFavoriteIds().then((ids) => { if (active) setFavoriteIds(ids); });
+    return () => { active = false; };
+  }, [session]);
+
+  // 楽観更新：先に UI 反映 → 失敗時ロールバック
+  const handleToggleFavorite = async (river: FavoriteRiver) => {
+    const id = river.id;
+    const wasFav = favoriteIdSet.has(id);
+    const prev = favoriteIds;
+    setFavoriteIds(wasFav ? favoriteIds.filter((x) => x !== id) : [id, ...favoriteIds]);
+    try {
+      if (wasFav) await removeFavorite(id);
+      else await addFavorite(id);
+    } catch {
+      setFavoriteIds(prev); // ロールバック
+      toast.error('お気に入りの更新に失敗しました');
+    }
   };
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
@@ -951,7 +982,7 @@ function App() {
           recentRivers={recentRivers}
           onClearRecent={() => setRecentRivers(clearRecentRivers())}
           favorites={favorites}
-          favoriteIds={favoriteIds}
+          favoriteIds={favoriteIdSet}
           onToggleFavorite={handleToggleFavorite}
           onSelectPrefecture={(prefecture) => {
             // ドロップダウンで県を選んだら、地方/地域フィルタはクリアして県単独で絞り込む
@@ -975,7 +1006,7 @@ function App() {
           {selectedRiver && (
             <RiverDetail
               river={selectedRiver}
-              isFavorite={favoriteIds.has(selectedRiver.id)}
+              isFavorite={favoriteIdSet.has(selectedRiver.id)}
               onToggleFavorite={() => handleToggleFavorite(selectedRiver)}
             />
           )}

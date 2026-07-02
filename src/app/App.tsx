@@ -6,7 +6,7 @@ import { RiverList } from './components/RiverList';
 import { RiverDetail } from './components/RiverDetail';
 import { AuthMenu } from './components/AuthMenu';
 import { getRecentRivers, addRecentRiver, clearRecentRivers, type RecentRiver } from './utils/recentRivers';
-import { getFavoriteIds, addFavorite, removeFavorite, type FavoriteRiver } from './utils/favoriteRivers';
+import { getFavoriteIds, addFavorite, removeFavorite, mergeLocalFavoritesToServer, type FavoriteRiver } from './utils/favoriteRivers';
 import { DpfDataCheck } from './components/DpfDataCheck';
 import { CameraTest } from './components/CameraTest';
 import { RiverApiTest } from './components/RiverApiTest';
@@ -109,6 +109,8 @@ function App() {
   const [rivers, setRivers] = useState<River[]>([])
   const [isLoadingRivers, setIsLoadingRivers] = useState(true);
   const [recentRivers, setRecentRivers] = useState<RecentRiver[]>(() => getRecentRivers());
+  // 認証セッション（お気に入りの取得/マージがこれに依存するため、お気に入りより前に宣言）
+  const [session, setSession] = useState<Session | null>(null);
   // お気に入りは river_id の配列で保持（サーバ=created_at降順 / localStorage=保存順）
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const favoriteIdSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
@@ -130,10 +132,18 @@ function App() {
     [favoriteIds, riverById]
   );
 
-  // セッション変化（ログイン/ログアウト）で再取得。未ログイン時は localStorage を読む。
+  // セッション変化で再取得。ログイン時は先に localStorage のお気に入りをサーバへマージする。
+  // mergeLocalFavoritesToServer は localStorage が空なら即 return するため、2回目以降は no-op。
   useEffect(() => {
     let active = true;
-    getFavoriteIds().then((ids) => { if (active) setFavoriteIds(ids); });
+    (async () => {
+      const uid = session?.user?.id;
+      if (uid) {
+        await mergeLocalFavoritesToServer(uid); // 初回ログイン時のみ実マージ→成功で localStorage クリア
+      }
+      const ids = await getFavoriteIds();
+      if (active) setFavoriteIds(ids);
+    })();
     return () => { active = false; };
   }, [session]);
 
@@ -154,8 +164,6 @@ function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  // 認証セッション（この段階では保持のみ。UIは Step 2、お気に入り連携は Step 3〜）
-  const [session, setSession] = useState<Session | null>(null);
   
   // 都道府県セクションへの参照
   const prefecturesSectionRef = useRef<HTMLDivElement>(null);
